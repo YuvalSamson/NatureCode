@@ -26,7 +26,12 @@ const DATA_DIR = path.join(__dirname, "data");
 const CHATS_FILE = path.join(DATA_DIR, "chats.json");
 
 app.use(express.json({ limit: "8mb" }));
-app.use(express.static(__dirname)); // serves index.html and any assets
+app.use(express.static(path.join(__dirname, "public"))); // serves public/index.html and assets
+
+// Explicit home route — guarantees the app loads at "/"
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // ---------- Chat storage (flat JSON file) ----------
 function ensureStore() {
