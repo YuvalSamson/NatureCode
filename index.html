@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מנוע ביומימיקרי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFAF7;
+    --surface: #FFFFFF;
+    --border: #E2E0D8;
+    --ink: #2C2C2A;
+    --ink-soft: #5F5E5A;
+    --ink-faint: #A8A69E;
+    --green: #1D9E75;
+    --green-deep: #085041;
+    --green-tint: #E1F5EE;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Assistant', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .ff-serif { font-family: 'Frank Ruhl Libre', serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 1.5rem; }
+
+  /* Header */
+  header { padding: 2.5rem 0 1.25rem; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 1.75rem; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 11px; background: var(--green);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .brand-mark svg { width: 21px; height: 21px; }
+  .brand-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  h1 { font-size: 36px; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 0.9rem; }
+  h1 .accent { color: var(--green); }
+  .lede { font-size: 17px; color: var(--ink-soft); max-width: 560px; }
+
+  /* Audience tabs */
+  .audience { display: flex; gap: 8px; margin: 2.25rem 0 0.75rem; flex-wrap: wrap; }
+  .aud-btn {
+    display: flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .15s;
+  }
+  .aud-btn svg { width: 16px; height: 16px; }
+  .aud-btn.active { border: 1.5px solid var(--green); background: var(--green-tint); color: var(--green-deep); }
+  .aud-hint { font-size: 13px; color: var(--ink-faint); margin-bottom: 1.25rem; }
+
+  /* Input */
+  .input-card {
+    position: relative; background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  textarea {
+    width: 100%; border: none; resize: none; padding: 14px 16px 52px; font-size: 16px;
+    line-height: 1.5; font-family: inherit; background: transparent; color: var(--ink); outline: none;
+  }
+  .send-btn {
+    position: absolute; bottom: 12px; left: 12px; display: flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; border: none; background: var(--green); color: #fff;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s;
+  }
+  .send-btn:disabled { background: #C8D6CF; cursor: default; }
+  .send-btn svg { width: 15px; height: 15px; }
+  .hint-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 4px 0; }
+  .kbd-hint { font-size: 12px; color: var(--ink-faint); }
+  .export-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .15s;
+  }
+  .export-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green-deep); }
+  .export-btn:disabled { opacity: 0.45; cursor: default; }
+  .export-btn svg { width: 14px; height: 14px; }
+
+  .error-box {
+    margin-top: 1rem; padding: 12px 16px; border-radius: 10px;
+    background: #FCEBEB; color: #A32D2D; font-size: 14px;
+  }
+
+  /* Results */
+  .results { padding: 1rem 0 4rem; }
+  .results-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  }
+  .results-label { font-size: 13px; font-weight: 600; color: var(--green); letter-spacing: 0.02em; }
+  .reset-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer;
+  }
+  .reset-btn svg { width: 14px; height: 14px; }
+  .card {
+    margin-bottom: 1rem; background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 1.25rem 1.4rem; animation: fadeUp .5s ease both;
+  }
+  .card-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+  .card-num {
+    font-family: 'Frank Ruhl Libre', serif; font-size: 13px; font-weight: 700;
+    width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .card-title { font-size: 16px; font-weight: 600; }
+  .card-body { font-size: 15.5px; line-height: 1.7; color: #3A3A37; white-space: pre-wrap; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+  .pulse { animation: pulse 1.6s ease-in-out infinite; }
+
+  /* History strip */
+  .history-strip {
+    margin-top: 1.5rem; padding: 1rem 1.25rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .history-strip h3 { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 10px; }
+  .history-item {
+    font-size: 13.5px; color: var(--ink-soft); padding: 7px 0; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  .history-item:first-of-type { border-top: none; }
+  .history-q { color: var(--ink); flex: 1; }
+  .history-meta { font-size: 11px; color: var(--ink-faint); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  @media (max-width: 480px) { h1 { font-size: 29px; } .lede { font-size: 16px; } }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      </div>
+      <span class="brand-name">מנוע הביומימיקרי</span>
+    </div>
+    <h1 class="ff-serif">תאר את האתגר שלך.<br><span class="accent">נמצא את הפתרון שהטבע כבר המציא.</span></h1>
+    <p class="lede">לא עוד עצה גנרית. המנוע מזקק את הפונקציה האמיתית שמאחורי השאלה, מוצא איך הטבע פתר אותה — ומתרגם זאת לפעולה.</p>
+
+    <div class="audience" id="audience" role="tablist" aria-label="בחירת קהל יעד"></div>
+    <p class="aud-hint" id="audHint"></p>
+
+    <div class="input-card">
+      <label class="sr-only" for="prompt">תאר את האתגר שלך</label>
+      <textarea id="prompt" rows="3"></textarea>
+      <button class="send-btn" id="sendBtn">
+        <span id="sendLabel">שלח לטבע</span>
+        <svg id="sendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+      </button>
+    </div>
+    <div class="hint-row">
+      <span class="kbd-hint">Ctrl / ⌘ + Enter לשליחה</span>
+      <button class="export-btn" id="exportBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        ייצוא היסטוריה ליומן
+      </button>
+    </div>
+    <div id="errorBox"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="results" id="results" style="display:none;"></div>
+  <div class="history-strip" id="historyStrip" style="display:none;">
+    <h3>היסטוריית שאלות</h3>
+    <div id="historyList"></div>
+  </div>
+</main>
+
+<script>
+const SYSTEM_PROMPT = `You are a biomimicry-based thinking engine. Your role is to help managers, engineers, and individuals solve challenges by drawing on nature's wisdom — using a strict 4-step methodology.
+
+## YOUR CORE METHODOLOGY
+When a user presents a challenge, always follow these four steps in order. Never skip a step.
+
+### STEP 1 — DEFINE THE PROBLEM
+Restate the user's challenge in your own words to confirm understanding.
+
+### STEP 2 — DISTILL THE CORE FUNCTION
+This is the most critical step. Do NOT answer the question as asked. Instead, extract the underlying functional need. Strip away domain-specific language. Ask: "What does nature need to DO here — not what does it need to BE?" Reframe the challenge as a biological function. State the distilled function explicitly.
+
+### STEP 3 — FIND NATURE'S SOLUTION
+Search your knowledge for organisms, ecosystems, or natural phenomena that solve this exact function. For each: name the organism/system, describe the specific mechanism, explain WHY it works. Provide at least 2 examples from different kingdoms or scales.
+
+### STEP 4 — TRANSLATE TO APPLICATION
+Bridge nature's solution to the user's context. Provide a concrete applicable insight, the underlying principle, and 3-4 deep questions (Reframe / Structure / Paradox / Action).
+
+## RESPONSE FORMAT
+Always respond in the SAME LANGUAGE the user wrote in. Structure every response exactly like this, using these section markers:
+
+###CHALLENGE###
+[one sentence — the challenge you understand]
+
+###FUNCTION###
+[one sentence — the core function to solve, functional not domain-specific]
+
+###NATURE###
+[Organism/system 1]: [mechanism] → [principle]
+[Organism/system 2]: [mechanism] → [principle]
+
+###TRANSLATION###
+[2-3 sentences connecting nature's principle to the user's context]
+
+###QUESTIONS###
+1. [Reframe question — challenges the assumption behind the problem]
+2. [Structure question — identifies existing anchors or constraints]
+3. [Paradox question — surfaces the hidden cost of current approach]
+4. [Action question — one small experiment to run within 30 days]
+
+## RULES
+- Never give generic advice (e.g. "communicate clearly", "build trust")
+- Every answer must trace to a specific natural mechanism
+- Always distill the function BEFORE searching for examples
+- The deeper questions are mandatory
+- Adapt tone to audience: precise for engineers, conceptual for managers, sharp and strategic for entrepreneurs (focus on differentiation, value, and the fundraising narrative), warm for general public
+- Keep each section concise and high-signal`;
+
+const AUDIENCES = [
+  { id: "manager", label: "מנהל/ת", apiLabel: "a manager", hint: "סוגיות ארגוניות ואסטרטגיות", placeholder: "למשל: אני מרגיש שיש הרבה כאוס בארגון ואני לא מצליח לייצר תחושת יציבות",
+    icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
+  { id: "engineer", label: "מהנדס/ת", apiLabel: "an engineer", hint: "אתגרי תכנון ועיצוב", placeholder: "למשל: אני צריך לפתח חומר שמפזר אור בצורה מקסימלית ממשטח דק",
+    icon: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/>' },
+  { id: "founder", label: "יזם/ת", apiLabel: "an entrepreneur / startup founder", hint: "בידול, גיוס, ואסטרטגיה עסקית", placeholder: "למשל: אני מפתח מוצר חדש ואני צריך למצוא בידול אמיתי מול המתחרים כדי לגייס סבב גדול",
+    icon: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>' },
+  { id: "personal", label: "אישי", apiLabel: "an individual seeking personal guidance", hint: "שאלות חיים אישיות", placeholder: "למשל: איך אני מוצא שקט נפשי כשהכל סביבי משתנה כל הזמן",
+    icon: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>' },
+];
+
+const SECTIONS = [
+  { key: "CHALLENGE", title: "האתגר שהובן", num: "01", color: "#888780" },
+  { key: "FUNCTION", title: "הפונקציה המזוקקת", num: "02", color: "#1D9E75" },
+  { key: "NATURE", title: "מה הטבע כבר פתר", num: "03", color: "#639922" },
+  { key: "TRANSLATION", title: "התרגום היישומי", num: "04", color: "#378ADD" },
+  { key: "QUESTIONS", title: "שאלות להעמקה", num: "05", color: "#7F77DD" },
+];
+
+let currentAudience = "manager";
+let loading = false;
+const history = [];
+
+// Build audience tabs
+const audienceEl = document.getElementById("audience");
+const audHintEl = document.getElementById("audHint");
+const promptEl = document.getElementById("prompt");
+
+function renderAudience() {
+  audienceEl.innerHTML = "";
+  AUDIENCES.forEach(a => {
+    const btn = document.createElement("button");
+    btn.className = "aud-btn" + (a.id === currentAudience ? " active" : "");
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", a.id === currentAudience);
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${a.icon}</svg> ${a.label}`;
+    btn.onclick = () => {
+      currentAudience = a.id;
+      renderAudience();
+      const aud = AUDIENCES.find(x => x.id === a.id);
+      audHintEl.textContent = aud.hint;
+      promptEl.placeholder = aud.placeholder;
+    };
+    audienceEl.appendChild(btn);
+  });
+}
+renderAudience();
+const initAud = AUDIENCES.find(a => a.id === currentAudience);
+audHintEl.textContent = initAud.hint;
+promptEl.placeholder = initAud.placeholder;
+
+function parseResponse(text) {
+  const result = {};
+  SECTIONS.forEach(({ key }) => {
+    const re = new RegExp("###" + key + "###([\\s\\S]*?)(?=###|$)");
+    const m = text.match(re);
+    result[key] = m ? m[1].trim() : "";
+  });
+  const hasAny = Object.values(result).some(v => v);
+  return hasAny ? result : null;
+}
+
+const sendBtn = document.getElementById("sendBtn");
+const sendLabel = document.getElementById("sendLabel");
+const sendIcon = document.getElementById("sendIcon");
+const resultsEl = document.getElementById("results");
+const errorBox = document.getElementById("errorBox");
+const exportBtn = document.getElementById("exportBtn");
+const historyStrip = document.getElementById("historyStrip");
+const historyList = document.getElementById("historyList");
+
+function setLoading(on) {
+  loading = on;
+  sendBtn.disabled = on || !promptEl.value.trim();
+  if (on) {
+    sendLabel.textContent = "מזקק...";
+    sendIcon.classList.add("pulse");
+  } else {
+    sendLabel.textContent = "שלח לטבע";
+    sendIcon.classList.remove("pulse");
+  }
+}
+
+promptEl.addEventListener("input", () => { sendBtn.disabled = loading || !promptEl.value.trim(); });
+promptEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
+});
+sendBtn.onclick = handleSubmit;
+
+async function handleSubmit() {
+  const question = promptEl.value.trim();
+  if (!question || loading) return;
+  setLoading(true);
+  errorBox.innerHTML = "";
+  resultsEl.style.display = "none";
+
+  const aud = AUDIENCES.find(a => a.id === currentAudience);
+
+  try {
+    const response = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: `[The user is ${aud.apiLabel}.]\n\n${question}` }],
+      }),
+    });
+    const data = await response.json();
+    const text = data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+    const parsed = parseResponse(text);
+    renderResults(parsed, text);
+
+    history.push({
+      timestamp: new Date(),
+      audience: aud.label,
+      question: question,
+      parsed: parsed,
+      raw: text,
+    });
+    renderHistory();
+  } catch (e) {
+    errorBox.innerHTML = '<div class="error-box">החיבור למנוע נכשל. בדוק את החיבור לרשת ונסה שוב.</div>';
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderResults(parsed, raw) {
+  resultsEl.innerHTML = "";
+  const head = document.createElement("div");
+  head.className = "results-head";
+  head.innerHTML = '<span class="results-label">תשובת המנוע</span>';
+  const resetBtn = document.createElement("button");
+  resetBtn.className = "reset-btn";
+  resetBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> שאלה חדשה';
+  resetBtn.onclick = () => {
+    promptEl.value = "";
+    resultsEl.style.display = "none";
+    sendBtn.disabled = true;
+    promptEl.focus();
+  };
+  head.appendChild(resetBtn);
+  resultsEl.appendChild(head);
+
+  if (parsed) {
+    SECTIONS.forEach((s, i) => {
+      const content = parsed[s.key];
+      if (!content) return;
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.animationDelay = (i * 0.08) + "s";
+      card.innerHTML =
+        '<div class="card-head">' +
+          '<span class="card-num" style="color:' + s.color + ';background:' + s.color + '14;">' + s.num + '</span>' +
+          '<h3 class="card-title">' + s.title + '</h3>' +
+        '</div>' +
+        '<div class="card-body"></div>';
+      card.querySelector(".card-body").textContent = content;
+      resultsEl.appendChild(card);
+    });
+  } else {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="card-body"></div>';
+    card.querySelector(".card-body").textContent = raw;
+    resultsEl.appendChild(card);
+  }
+  resultsEl.style.display = "block";
+  resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderHistory() {
+  if (history.length === 0) { historyStrip.style.display = "none"; return; }
+  exportBtn.disabled = false;
+  historyStrip.style.display = "block";
+  historyList.innerHTML = "";
+  [...history].reverse().forEach((h, idx) => {
+    const realIdx = history.length - idx;
+    const item = document.createElement("div");
+    item.className = "history-item";
+    const t = h.timestamp;
+    const time = t.toLocaleString("he-IL", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+    item.innerHTML = '<span class="history-q"></span><span class="history-meta">' + h.audience + ' · ' + time + '</span>';
+    item.querySelector(".history-q").textContent = realIdx + ". " + h.question;
+    historyList.appendChild(item);
+  });
+}
+
+// ---- Export to readable log file ----
+function pad(n) { return String(n).padStart(2, "0"); }
+function fmtDate(d) {
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+const SECTION_LABELS = {
+  CHALLENGE: "האתגר שהובן",
+  FUNCTION: "הפונקציה המזוקקת",
+  NATURE: "מה הטבע כבר פתר",
+  TRANSLATION: "התרגום היישומי",
+  QUESTIONS: "שאלות להעמקה",
+};
+
+function buildLog() {
+  const line = "═".repeat(56);
+  const thin = "─".repeat(56);
+  let out = "";
+  out += line + "\n";
+  out += "  מנוע ביומימיקרי — יומן שיחה\n";
+  out += "  יוצא בתאריך: " + fmtDate(new Date()) + "\n";
+  out += "  סך הכל שאלות: " + history.length + "\n";
+  out += line + "\n\n";
+
+  history.forEach((h, i) => {
+    out += thin + "\n";
+    out += "[" + (i + 1) + "]  " + fmtDate(h.timestamp) + "   |   קהל יעד: " + h.audience + "\n";
+    out += thin + "\n\n";
+    out += "שאלה:\n" + h.question + "\n\n";
+    out += "תשובת המנוע:\n\n";
+    if (h.parsed) {
+      SECTIONS.forEach(s => {
+        const c = h.parsed[s.key];
+        if (!c) return;
+        out += "▸ " + SECTION_LABELS[s.key] + ":\n" + c + "\n\n";
+      });
+    } else {
+      out += h.raw + "\n\n";
+    }
+    out += "\n";
+  });
+  return out;
+}
+
+exportBtn.onclick = () => {
+  if (history.length === 0) return;
+  const content = buildLog();
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date();
+  a.href = url;
+  a.download = "biomimicry-log-" + stamp.getFullYear() + pad(stamp.getMonth()+1) + pad(stamp.getDate()) + "-" + pad(stamp.getHours()) + pad(stamp.getMinutes()) + ".txt";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+</script>
+</body>
+</html>
