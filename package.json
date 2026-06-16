@@ -1,7 +1,7 @@
 {
   "name": "biomimicry-engine",
   "version": "1.0.0",
-  "description": "Biomimicry thinking engine — web app with secure API proxy",
+  "description": "Biomimicry thinking engine with server-side chat memory",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +10,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "express-rate-limit": "^7.4.0"
+    "express": "^4.19.2"
+  },
+  "optionalDependencies": {
+    "dotenv": "^16.4.5"
   }
 }

@@ -1,113 +1,104 @@
-// server.js — שכבת ביניים מאובטחת למנוע בינת הטבע
-// השרת מחזיק את מפתח הגישה, את הנחיות המנוע (ה-IP) ואת המודל,
-// מגביל קצב פניות, ומעביר את הבקשות למנוע הבינה.
-// הדפדפן שולח רק את הודעות השיחה — לעולם לא את ההנחיות.
+// ============================================================
+//  Biomimicry Engine — server
+//  - Serves the static front-end (index.html)
+//  - Proxies the Anthropic API (keeps the API key on the server)
+//  - Persists chats on disk so history survives reloads & restarts
+//
+//  Run:
+//    npm install
+//    set ANTHROPIC_API_KEY=sk-ant-...   (PowerShell: $env:ANTHROPIC_API_KEY="sk-ant-...")
+//    node server.js
+//  Requires Node.js 18+ (built-in fetch).
+// ============================================================
 
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
-const rateLimit = require("express-rate-limit");
+
+// Optional .env support (works even if dotenv isn't installed)
+try { require("dotenv").config(); } catch (e) { /* dotenv optional */ }
 
 const app = express();
-app.set("trust proxy", 1);
-app.use(express.json({ limit: "1mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+const PORT = process.env.PORT || 3000;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-// ===== המודל שבו המנוע משתמש =====
-// כדי להחליף מודל, שנה רק את השורה הבאה:
-//   claude-opus-4-8    — מודל עוצמתי לאתגרים מורכבים (מומלץ)
-//   claude-fable-5     — המודל החדש ביותר
-//   claude-sonnet-4-6  — מהיר וחסכוני יותר
-const MODEL = "claude-opus-4-8";
+const DATA_DIR = path.join(__dirname, "data");
+const CHATS_FILE = path.join(DATA_DIR, "chats.json");
 
-// ===== הנחיות המנוע — ה-IP הסודי =====
-// יושב כאן על השרת בלבד ולעולם לא נשלח לדפדפן.
-const SYSTEM_PROMPT = `אתה מנוע בינת הטבע. אתה לא נותן תשובות — אתה מלמד לראות. אתה מתרגם את חוכמת החיים שהטבע זיקק במשך מיליארדי שנים לשפת פעולה מעשית, עבור מנהלים, מהנדסים, יזמים ואנשים פרטיים.
+app.use(express.json({ limit: "8mb" }));
+app.use(express.static(__dirname)); // serves index.html and any assets
 
-## עיקרון מכונן
-אתה מתוכנן לעבוד כמו הטבע — כאילו הטבע עצמו תכנן אותך. אינך רק מדבר בשפת הטבע; אתה מתנהג לפי חוקיו:
-- חיסכון ואלגנטיות — אל תבזבז מילים. כל חלק משרת תפקיד.
-- הדרגתיות — אל תקפוץ ואל תציף. הובל צעד אחר צעד.
-- הסתגלות — התאם את עצמך לקהל, לעומק ולקצב.
-- חוסן דרך גיוון — הצע עדשות וזוויות, לא תשובה אחת.
-- הכל קשור להכל — שום שלב אינו עומד לבד.
+// ---------- Chat storage (flat JSON file) ----------
+function ensureStore() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(CHATS_FILE)) fs.writeFileSync(CHATS_FILE, "[]", "utf8");
+}
+function readChats() {
+  ensureStore();
+  try {
+    const data = JSON.parse(fs.readFileSync(CHATS_FILE, "utf8"));
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+function writeChats(chats) {
+  ensureStore();
+  fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2), "utf8");
+}
 
-## שלושה עקרונות-על — חובה בכל תשובה
-1. אמינות: כל עיקרון וכל דוגמה מבוססים על תופעה טבעית אמיתית והסבר מדעי סביר. דוגמאות מהשטח (חברות, מוצרים, מחקרים) רק כשהן מאומתות. כשאינך בטוח — הצג יישום כללי ואל תמציא שם, חברה או מחקר. עדיף "אין לי כאן דוגמה מאומתת" מהמצאה.
-2. מעשיות: אל תישאר מופשט או אקדמי. כל סוגיה מובילה לתובנה, הסבר וכלי פעולה ברור.
-3. הוליסטיות: הפתרון מתייחס למערכת השלמה, לא לרכיב בודד. כששינוי נעשה במקום אחד — הצבע על מה עוד מושפע.
-
-## זיהוי קהל היעד
-התאם את תרגום העדשה לקהל: מנהל — עקרונות ניהוליים, טון מושגי. מהנדס — עקרונות תכנוניים, טון מדויק. יזם — עקרונות אסטרטגיים, דגש על בידול וערך. אדם פרטי — עקרונות חיים, טון חם.
-
-## ה-FLOW — עשרה שלבים עם נקודות נשימה
-חוק נקודת הנשימה: בסוף כל שלב עצור ושאל שאלה קצרה ("זה מתיישב? רוצה עוד דוגמה, או נמשיך?"). אפשר תמיד העמקה בתוך השלב. אל תתקדם לשלב הבא בלי איתות מהמשתמש. הצג שלב אחד (לכל היותר שניים) בכל תור.
-
-שלב 1 — תיאור והבנה: שקף במילים שלך מה הבנת. נקודת נשימה.
-שלב 2 — שלוש שאלות העמקה: שאלת המסגור מחדש (מאתגרת את ההנחה), שאלת העוגנים (מה כבר יציב ומחזיק), שאלת הפרדוקס (המחיר הסמוי של הגישה הנוכחית). עצור והמתן לתשובות. אל תתקדם עד שהמשתמש עונה.
-שלב 3 — הצורך האמיתי + לולאת זיקוק: נסח את הצורך האמיתי שמתחת לסוגיה והצג לאישור. אם אושר — המשך. אם לא — שאל שאלות שמדייקות והצג ניסוח מעודכן, עד לאישור.
-שלב 4 — עיקרון הטבע: הצג את העיקרון ואז דוגמאות מהטבע (שם האורגניזם/מערכת, המנגנון, מדוע הוא עובד). נסח את העיקרון כעדשה — זווית התבוננות. נקודת נשימה.
-שלב 5 — יישום בסוגיה: א. פתרון תיאורטי הוליסטי. ב. דוגמאות מהשטח מאומתות, מתורגמות לעולם המשתמש (טכנולוגיות/מוצרים למהנדס ויזם, תיאורי מקרה ארגוניים למנהל, סוגיות אישיות לאדם פרטי). אם אין דוגמה מאומתת — אמור זאת. נקודת נשימה.
-שלב 6 — פעולה מוצעת: פעולה אחת קטנה ואפקטיבית — קטנה, ברורה וישימה (עם מסגרת זמן), נותנת משוב מהיר (ניסוי בסגנון Agile), ומזמינה הבחנה בשינויים הקטנים. נקודת נשימה.
-שלב 7 — לולאת מעקב: לווה את הפעולה — האם ברורה ומקובלת, האם בוצעה, האם הועילה ובאיזו רמה, והצע פעולות המשך.
-שלב 8 — נקודת עצירה: כאן ניתן מענה מלא. שאל "רוצה להעמיק?". אם לא — סיים בעדינות. אם כן — עבור לשלב 9.
-שלב 9 — מעבר לסוגיה זו (השכבה התודעתית): הרחב את העיקרון כעיקרון יסוד, הראה את היבטיו בתחומים שונים (אותה עדשה, משמעות שונה בכל תחום), הזמן לזיהוי עצמי, הצג את העיקרון המנוגד, חבר לעדשות קודמות, תן שאלת התבוננות נושאת, וחזור לצד הטבעי-המקורי. נקודת נשימה.
-שלב 10 — הזמנה לתרגול: שאל אם המשתמש רוצה תזכורת יומית להטמעת העיקרון — כל תזכורת: תיאור העיקרון, דוגמה מהטבע, דוגמה ליישום, מתורגמים לשפת התחום. (בגרסה זו: הגדר והצע את האופציה.)
-
-## מה לא לעשות
-- אל תיתן עצות גנריות ("תקשר בבירור", "בנה אמון").
-- אל תדלג על שלבים ואל תמהר אל הפתרון לפני זיקוק הצורך.
-- אל תמציא דוגמאות, שמות, חברות או מחקרים.
-- אל תחשוב במקום המשתמש — גרום לו לחשוב.
-- אל תהפוך לצ׳אט חופשי שמאבד את המבנה.
-
-ענה תמיד בשפת המשתמש. שמור על כל שלב תמציתי ועתיר-ערך, עם כותרת קצרה, וסיים בנקודת נשימה.`;
-
-// הגנה: עד 20 שאלות לכל מבקר בכל שעה
-const limiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: { message: "הגעת למספר השאלות המרבי לשעה. נסה שוב מאוחר יותר." } },
+// ---------- Chat CRUD ----------
+app.get("/api/chats", (req, res) => {
+  res.json(readChats());
 });
-app.use("/api/", limiter);
 
-// נקודת הקצה שאליה הדפדפן פונה — הדפדפן שולח רק את messages
+// Upsert a single chat by id
+app.put("/api/chats/:id", (req, res) => {
+  const id = req.params.id;
+  const incoming = req.body;
+  if (!incoming || incoming.id !== id) {
+    return res.status(400).json({ error: "chat id mismatch" });
+  }
+  const chats = readChats();
+  const idx = chats.findIndex(c => c.id === id);
+  if (idx >= 0) chats[idx] = incoming;
+  else chats.push(incoming);
+  writeChats(chats);
+  res.json({ ok: true });
+});
+
+app.delete("/api/chats/:id", (req, res) => {
+  const id = req.params.id;
+  const chats = readChats().filter(c => c.id !== id);
+  writeChats(chats);
+  res.json({ ok: true });
+});
+
+// ---------- Anthropic proxy ----------
 app.post("/api/ask", async (req, res) => {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
-    return res.status(500).json({ error: { message: "ANTHROPIC_API_KEY is not set" } });
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY on the server" });
   }
-
-  // מקבל מהדפדפן רק את הודעות השיחה. ההנחיות והמודל נוספים כאן, בשרת.
-  const messages = Array.isArray(req.body && req.body.messages) ? req.body.messages : [];
-  if (messages.length === 0) {
-    return res.status(400).json({ error: { message: "no messages provided" } });
-  }
-
   try {
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": key,
+        "x-api-key": ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        messages: messages,
-      }),
+      body: JSON.stringify(req.body),
     });
     const data = await upstream.json();
     res.status(upstream.status).json(data);
-  } catch (err) {
-    res.status(500).json({ error: { message: String(err) } });
+  } catch (e) {
+    res.status(502).json({ error: "proxy request failed", detail: String(e) });
   }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Nature engine running on http://localhost:" + PORT);
+  console.log("Biomimicry server running on http://localhost:" + PORT);
+  if (!ANTHROPIC_API_KEY) {
+    console.warn("WARNING: ANTHROPIC_API_KEY is not set — /api/ask will fail until you set it.");
+  }
 });
