@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מנוע ביומימיקרי</title>
+<title>מנוע בינת הטבע</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet">
@@ -149,21 +149,24 @@
   }
   .send-btn:disabled { background: #C8D6CF; cursor: default; }
   .send-btn svg { width: 15px; height: 15px; }
-  .hint-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 4px 0; }
+  .hint-row { display: flex; align-items: center; margin: 8px 4px 0; }
   .kbd-hint { font-size: 12px; color: var(--ink-faint); }
-  .export-btn {
-    display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 9px;
-    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
-    font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .15s;
-  }
-  .export-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green-deep); }
-  .export-btn:disabled { opacity: 0.45; cursor: default; }
-  .export-btn svg { width: 14px; height: 14px; }
 
   .error-box {
     margin-top: 1rem; padding: 12px 16px; border-radius: 10px;
     background: #FCEBEB; color: #A32D2D; font-size: 14px;
   }
+
+  .continue-card {
+    position: relative; background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    margin-top: 1.5rem;
+  }
+  .continue-card textarea {
+    width: 100%; border: none; resize: none; padding: 14px 16px 52px; font-size: 15.5px;
+    line-height: 1.5; font-family: inherit; background: transparent; color: var(--ink); outline: none;
+  }
+  .continue-card .send-btn { position: absolute; bottom: 12px; left: 12px; }
 
   /* Conversation thread */
   .results { padding: 1rem 0 4rem; }
@@ -235,7 +238,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
       </div>
       <div>
-        <div class="ttl">מנוע הביומימיקרי</div>
+        <div class="ttl">מנוע בינת הטבע</div>
         <div class="sub">היסטוריית שיחות</div>
       </div>
     </div>
@@ -261,7 +264,7 @@
           <div class="brand-mark">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
           </div>
-          <span class="brand-name">מנוע הביומימיקרי</span>
+          <span class="brand-name">מנוע בינת הטבע</span>
         </div>
         <button class="pill mobile-only" id="openSidebarBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -270,13 +273,13 @@
         </button>
       </div>
 
-      <h1 class="ff-serif">תאר את האתגר שלך.<br><span class="accent">נמצא את הפתרון שהטבע כבר המציא.</span></h1>
-      <p class="lede">לא עוד עצה גנרית. המנוע מוביל אותך בשיחה מדורגת: מבין את הסוגיה, מעמיק בשאלות, מזקק את הצורך האמיתי, ומוצא איך הטבע כבר פתר אותו — עד לפעולה מעשית. כל שיחה נשמרת מימין, וניתן להמשיך אותה בכל רגע.</p>
+      <h1 class="ff-serif">לא עוד תשובה.<br><span class="accent">המנוע שמלמד אותך לראות כמו הטבע.</span></h1>
+      <p class="lede">תאר את האתגר שלך, והמנוע יוביל אותך בשיחה מדורגת: יבין את הסוגיה, יעמיק בשאלות, יזקק איתך את הצורך האמיתי, ויראה לך איך הטבע כבר פתר אותו — עד לעיקרון ולפעולה מעשית. כל שיחה נשמרת מימין, וניתן להמשיך אותה בכל רגע.</p>
 
       <div class="audience" id="audience" role="tablist" aria-label="בחירת קהל יעד"></div>
       <p class="aud-hint" id="audHint"></p>
 
-      <div class="input-card">
+      <div class="input-card" id="mainInputCard">
         <label class="sr-only" for="prompt">תאר את האתגר שלך</label>
         <textarea id="prompt" rows="3"></textarea>
         <button class="send-btn" id="sendBtn">
@@ -284,12 +287,8 @@
           <svg id="sendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
         </button>
       </div>
-      <div class="hint-row">
+      <div class="hint-row" id="mainHintRow">
         <span class="kbd-hint">Ctrl / ⌘ + Enter לשליחה</span>
-        <button class="export-btn" id="exportBtn" disabled>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-          ייצוא השיחה ליומן
-        </button>
       </div>
       <div id="errorBox"></div>
     </div>
@@ -409,7 +408,7 @@ const AUDIENCES = [
     icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
   { id: "engineer", label: "מהנדס/ת", apiLabel: "an engineer", hint: "אתגרי תכנון ועיצוב", placeholder: "למשל: אני צריך לפתח חומר שמפזר אור בצורה מקסימלית ממשטח דק",
     icon: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/>' },
-  { id: "founder", label: "יזם/ת", apiLabel: "an entrepreneur / startup founder", hint: "בידול, גיוס, ואסטרטגיה עסקית", placeholder: "למשל: אני מפתח מוצר חדש ואני צריך למצוא בידול אמיתי מול המתחרים כדי לגייס סבב גדול",
+  { id: "founder", label: "יזם/ת", apiLabel: "an entrepreneur / startup founder", hint: "בידול, גיוס, ואסטרטגיה עסקית", placeholder: "למשל: אני מפתח משקפיים חכמים שמקרינים מידע על העדשה לגבי מה שהמשתמש רואה — זיהוי אובייקטים, ניווט, תרגום בזמן אמת. השוק מתחיל להתמלא: Meta, Apple, Google. אני צריך למצוא בידול אמיתי שיבדל אותי, ולגייס סבב גדול.",
     icon: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>' },
   { id: "personal", label: "אישי", apiLabel: "an individual seeking personal guidance", hint: "שאלות חיים אישיות", placeholder: "למשל: איך אני מוצא שקט נפשי כשהכל סביבי משתנה כל הזמן",
     icon: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>' },
@@ -442,7 +441,8 @@ const sendLabel      = document.getElementById("sendLabel");
 const sendIcon       = document.getElementById("sendIcon");
 const resultsEl      = document.getElementById("results");
 const errorBox       = document.getElementById("errorBox");
-const exportBtn      = document.getElementById("exportBtn");
+const mainInputCard  = document.getElementById("mainInputCard");
+const mainHintRow    = document.getElementById("mainHintRow");
 const chatsListEl    = document.getElementById("chatsList");
 const chatsCountEl   = document.getElementById("chatsCount");
 const sidebarCountLabel = document.getElementById("sidebarCountLabel");
@@ -603,31 +603,62 @@ function renderThread() {
 
   if (!chat || chat.messages.length === 0) {
     resultsEl.style.display = "none";
-    exportBtn.disabled = true;
+    mainInputCard.style.display = "";
+    mainHintRow.style.display = "";
     return;
   }
   resultsEl.style.display = "block";
-  exportBtn.disabled = false;
+  // בזמן שיחה פעילה, תיבת הקלט הראשית מתחלפת בתיבת ההמשך שבתוך ה-thread
+  mainInputCard.style.display = "none";
+  mainHintRow.style.display = "none";
 
   const head = document.createElement("div");
   head.className = "results-head";
   head.innerHTML = '<span class="results-label">תשובת המנוע</span>';
-  const resetBtn = document.createElement("button");
-  resetBtn.className = "reset-btn";
-  resetBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg> שיחה חדשה';
-  resetBtn.onclick = startNewChat;
-  head.appendChild(resetBtn);
   resultsEl.appendChild(head);
 
   let pendingUser = null;
+  let isWaitingForReply = false;
   chat.messages.forEach(m => {
     if (m.role === "user") { pendingUser = m; }
     else { appendExchange(pendingUser, m); pendingUser = null; }
   });
-  if (pendingUser) appendExchange(pendingUser, null);
+  if (pendingUser) { appendExchange(pendingUser, null); isWaitingForReply = true; }
+
+  if (!isWaitingForReply) appendContinueInput();
 
   const exchanges = resultsEl.querySelectorAll(".exchange");
   if (exchanges.length) exchanges[exchanges.length - 1].scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ---- Continue-conversation input (appears at the bottom of an active thread) ----
+function appendContinueInput() {
+  const wrap = document.createElement("div");
+  wrap.className = "continue-card";
+  wrap.innerHTML =
+    '<label class="sr-only" for="continuePrompt">המשך את השיחה</label>' +
+    '<textarea id="continuePrompt" rows="2" placeholder="כתוב את תשובתך כאן…"></textarea>' +
+    '<button class="send-btn" id="continueSendBtn">' +
+      '<span>שלח</span>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>' +
+    '</button>';
+  resultsEl.appendChild(wrap);
+
+  const continueEl = wrap.querySelector("#continuePrompt");
+  const continueBtn = wrap.querySelector("#continueSendBtn");
+
+  function submitContinue() {
+    const text = continueEl.value.trim();
+    if (!text || loading) return;
+    promptEl.value = text;
+    continueEl.value = "";
+    handleSubmit();
+  }
+  continueBtn.onclick = submitContinue;
+  continueEl.addEventListener("keydown", e => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitContinue();
+  });
+  if (!loading) continueEl.focus();
 }
 
 function appendExchange(userMsg, assistantMsg) {
@@ -694,7 +725,8 @@ function startNewChat() {
   promptEl.value = "";
   sendBtn.disabled = true;
   resultsEl.style.display = "none";
-  exportBtn.disabled = true;
+  mainInputCard.style.display = "";
+  mainHintRow.style.display = "";
   renderChatsList();
   closeSidebar();
   promptEl.focus();
@@ -709,7 +741,7 @@ async function deleteChat(id) {
   await removeChatOnServer(id);
   chats = chats.filter(c => c.id !== id);
   if (activeChatId === id) activeChatId = null;
-  if (!getActiveChat()) { resultsEl.style.display = "none"; exportBtn.disabled = true; }
+  if (!getActiveChat()) { resultsEl.style.display = "none"; }
   else renderThread();
   renderChatsList();
 }
@@ -766,59 +798,6 @@ openSidebarBtn.onclick  = openSidebar;
 closeSidebarBtn.onclick = closeSidebar;
 sidebarOverlay.onclick  = closeSidebar;
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSidebar(); });
-
-// ---- Export active chat ----
-function pad(n) { return String(n).padStart(2, "0"); }
-function fmtDate(d) {
-  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
-}
-function buildLog(chat) {
-  const line = "═".repeat(56);
-  const thin = "─".repeat(56);
-  let out = "";
-  out += line + "\n";
-  out += "  מנוע ביומימיקרי — יומן שיחה\n";
-  out += "  כותרת: " + (chat.title || "—") + "\n";
-  out += "  יוצא בתאריך: " + fmtDate(new Date()) + "\n";
-  out += line + "\n\n";
-
-  let qn = 0;
-  let lastUser = null;
-  chat.messages.forEach(m => {
-    if (m.role === "user") { lastUser = m; return; }
-    qn++;
-    const aud = AUDIENCES.find(a => a.id === (lastUser ? lastUser.audience : null));
-    out += thin + "\n";
-    out += "[" + qn + "]  " + fmtDate(new Date(m.timestamp)) + "   |   קהל יעד: " + (aud ? aud.label : "—") + "\n";
-    out += thin + "\n\n";
-    out += "שאלה:\n" + (lastUser ? lastUser.content : "") + "\n\n";
-    out += "תשובת המנוע:\n\n";
-    if (m.parsed) {
-      if (m.parsed.STAGE) out += "▸ שלב: " + m.parsed.STAGE + "\n\n";
-      if (m.parsed.BODY) out += m.parsed.BODY + "\n\n";
-      if (m.parsed.BREATH) out += "▸ נקודת נשימה: " + m.parsed.BREATH + "\n\n";
-    } else {
-      out += (m.raw || m.content || "") + "\n\n";
-    }
-    out += "\n";
-    lastUser = null;
-  });
-  return out;
-}
-exportBtn.onclick = () => {
-  const chat = getActiveChat();
-  if (!chat || chat.messages.length === 0) return;
-  const blob = new Blob([buildLog(chat)], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const stamp = new Date();
-  a.href = url;
-  a.download = "biomimicry-" + stamp.getFullYear() + pad(stamp.getMonth()+1) + pad(stamp.getDate()) + "-" + pad(stamp.getHours()) + pad(stamp.getMinutes()) + ".txt";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
 
 // ---- Init ----
 renderAudience();
