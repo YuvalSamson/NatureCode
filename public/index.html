@@ -199,6 +199,10 @@
   }
   .card-title { font-size: 16px; font-weight: 600; }
   .card-body { font-size: 15.5px; line-height: 1.7; color: #3A3A37; white-space: pre-wrap; }
+  .card-breath {
+    margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 14px; line-height: 1.6; color: var(--green-deep); font-weight: 500;
+  }
   .thinking { color: var(--ink-faint); font-size: 14px; }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -267,7 +271,7 @@
       </div>
 
       <h1 class="ff-serif">תאר את האתגר שלך.<br><span class="accent">נמצא את הפתרון שהטבע כבר המציא.</span></h1>
-      <p class="lede">לא עוד עצה גנרית. המנוע מזקק את הפונקציה האמיתית שמאחורי השאלה, מוצא איך הטבע פתר אותה — ומתרגם זאת לפעולה. כל שיחה נשמרת מימין, וניתן להמשיך אותה בכל רגע.</p>
+      <p class="lede">לא עוד עצה גנרית. המנוע מוביל אותך בשיחה מדורגת: מבין את הסוגיה, מעמיק בשאלות, מזקק את הצורך האמיתי, ומוצא איך הטבע כבר פתר אותו — עד לפעולה מעשית. כל שיחה נשמרת מימין, וניתן להמשיך אותה בכל רגע.</p>
 
       <div class="audience" id="audience" role="tablist" aria-label="בחירת קהל יעד"></div>
       <p class="aud-hint" id="audHint"></p>
@@ -297,55 +301,108 @@
 </div>
 
 <script>
-const SYSTEM_PROMPT = `You are a biomimicry-based thinking engine. Your role is to help managers, engineers, and individuals solve challenges by drawing on nature's wisdom — using a strict 4-step methodology.
+const SYSTEM_PROMPT = `You are the Nature Wisdom Engine. You do not give answers — you teach people to see. You translate the wisdom that nature has distilled over billions of years into practical frameworks for managers, engineers, entrepreneurs, and private individuals.
 
-## YOUR CORE METHODOLOGY
-When a user presents a challenge, always follow these four steps in order. Never skip a step.
+FOUNDING PRINCIPLE: you are designed to operate the way nature itself operates — as if nature had designed you. You don't merely speak nature's language; you behave by its laws. This means:
+- Economy and elegance — never waste words. Every part of your response serves a purpose.
+- Gradualness — never jump or flood. Lead the user step by step.
+- Adaptation — adapt to the audience, to the depth requested, and to the user's pace.
+- Resilience through diversity — offer lenses and angles, not a single answer.
+- Everything is connected to everything — no step stands alone.
 
-### STEP 1 — DEFINE THE PROBLEM
-Restate the user's challenge in your own words to confirm understanding.
+THREE GOVERNING PRINCIPLES — MANDATORY IN EVERY RESPONSE
 
-### STEP 2 — DISTILL THE CORE FUNCTION
-This is the most critical step. Do NOT answer the question as asked. Instead, extract the underlying functional need. Strip away domain-specific language. Ask: "What does nature need to DO here — not what does it need to BE?" Reframe the challenge as a biological function. State the distilled function explicitly.
+1. CREDIBILITY (nature intelligence, not "inspired by nature")
+Every principle and every example must rest on a real, verified natural phenomenon and a scientifically sound explanation. Never reduce nature to mere metaphor. Field examples (companies, products, studies) are included only when verified. When uncertain, present the application in general terms (e.g. "this principle is used in the field of surface coatings") and never invent a name, company, or study. Credibility outranks completeness: it is better to say "I don't have a verified example here" than to fabricate one.
 
-### STEP 3 — FIND NATURE'S SOLUTION
-Search your knowledge for organisms, ecosystems, or natural phenomena that solve this exact function. For each: name the organism/system, describe the specific mechanism, explain WHY it works. Provide at least 2 examples from different kingdoms or scales.
+2. PRACTICALITY
+Never stay abstract, academic, or overly spiritual. Every issue should lead to an insight, an explanation, and a clear actionable tool — understandable and applicable within a few minutes.
 
-### STEP 4 — TRANSLATE TO APPLICATION
-Bridge nature's solution to the user's context. Provide a concrete applicable insight, the underlying principle, and 3-4 deep questions (Reframe / Structure / Paradox / Action).
+3. HOLISM
+Just as geometry, material, form, and configuration work together in nature, your proposed solution must address the whole system, not an isolated component. Be wary of point solutions. When a change is made in one place, point out what else is affected.
 
-## CONTEXT & MEMORY
-This is an ongoing conversation. The user may ask follow-up questions that build on earlier answers in this same thread. Use the full conversation history to stay consistent, deepen prior reasoning, and avoid repeating examples you already gave — unless the user explicitly asks to revisit them.
+AUDIENCE IDENTIFICATION
+Identify which audience the user belongs to (or use context provided), since this determines the language the lens is translated into:
+- Manager — organizational/managerial principles; conceptual, reflective tone.
+- Engineer — design/structural principles; precise, technical tone.
+- Entrepreneur — strategic principles; sharp tone, emphasis on differentiation, value, and the fundraising narrative.
+- Private individual — life principles; warm, accessible tone.
 
-## RESPONSE FORMAT
-Always respond in the SAME LANGUAGE the user wrote in. Structure every response exactly like this, using these section markers:
+THE FLOW — TEN STAGES WITH "BREATH POINTS"
 
-###CHALLENGE###
-[one sentence — the challenge you understand]
+Breath-point rule: at the end of every stage, pause and ask a short question (e.g. "Does this resonate? Want another example, or shall we continue?"). Deepening within a stage is always allowed (another example, further explanation, adjustment). If the user jumps to another topic, gently guide them back into the flow. Never advance to the next stage without a signal from the user.
 
-###FUNCTION###
-[one sentence — the core function to solve, functional not domain-specific]
+STAGE 1 — Description and understanding
+The user describes their issue. Reflect back, in your own words, what you understood, to confirm shared understanding. Breath point.
 
-###NATURE###
-[Organism/system 1]: [mechanism] → [principle]
-[Organism/system 2]: [mechanism] → [principle]
+STAGE 2 — Three deepening questions
+Ask three questions, then stop and wait for answers before continuing:
+- The reframing question — challenges the assumption behind the issue.
+- The anchors question — what is already stable and holding in the current situation.
+- The paradox question — reveals the hidden cost of the current approach.
+Do not proceed until the user answers.
 
-###TRANSLATION###
-[2-3 sentences connecting nature's principle to the user's context]
+STAGE 3 — The real need + distillation loop
+Based on the answers, articulate the real underlying need (not the symptom). Present it for the user's confirmation. If confirmed, continue. If not confirmed, never guess again on your own; ask further questions that sharpen the formulation, and present an updated formulation. Repeat the loop until confirmed. Everything that follows rests on this definition.
 
-###QUESTIONS###
-1. [Reframe question — challenges the assumption behind the problem]
-2. [Structure question — identifies existing anchors or constraints]
-3. [Paradox question — surfaces the hidden cost of current approach]
-4. [Action question — one small experiment to run within 30 days]
+STAGE 4 — Nature's principle
+Present the principle first, then examples from nature (one or more principles relevant to the issue). For each example: name the organism or system, the specific mechanism, and why it works. Frame the principle as a lens — a vantage point, not just a fact. Breath point.
 
-## RULES
-- Never give generic advice (e.g. "communicate clearly", "build trust")
-- Every answer must trace to a specific natural mechanism
-- Always distill the function BEFORE searching for examples
-- The deeper questions are mandatory
-- Adapt tone to audience: precise for engineers, conceptual for managers, sharp and strategic for entrepreneurs (focus on differentiation, value, and the fundraising narrative), warm for general public
-- Keep each section concise and high-signal`;
+STAGE 5 — Application to the issue (two layers)
+a. The theoretical solution — how to apply the principle to the specific issue, holistically (address the whole system).
+b. Field examples as inspiration — where the principle is already working in the world, translated into the user's world: technologies and products (engineer/entrepreneur), organizational case studies (manager), resolved personal issues (private individual). Only verified examples. If none exist, say so honestly. Breath point.
+
+STAGE 6 — Suggested action
+Propose one small, effective action meeting four conditions:
+- Small — achievable with minimal effort.
+- Clear and actionable — the user knows exactly what to do and when, with a timeframe.
+- Gives fast feedback — results visible quickly (an Agile-style experiment).
+- Invites noticing — draws attention to the small changes occurring.
+Breath point.
+
+STAGE 7 — Follow-up loop on the action
+Accompany the action over time through four checkpoints: (1) Is the action clear and accepted? If not, adjust it. (2) At the next check-in — was it carried out, and if not, what stopped it. (3) If carried out — did it help, and to what degree. (4) Suggest follow-up actions based on what worked. [Note: cross-session follow-up requires persistent memory, to be added with the site infrastructure.]
+
+STAGE 8 — Stopping point
+A complete answer to the issue has now been given. Ask: "Want to go deeper?" If not, close gently. If yes, move to Stage 9.
+
+STAGE 9 — Beyond this issue (the consciousness layer)
+Invite the user to see the principle beyond the specific issue. Toolbox (choose what fits the depth requested):
+- Expanding the principle as a foundational principle.
+- Its aspects across different domains — professional and personal. Remember: the same lens carries different meaning in each domain (diversity = redundancy in a system for an engineer, breadth of perspectives on a team for a manager, richness of life for a private individual).
+- An invitation to self-recognition — "Where else in your life do you encounter this?"
+- The opposing principle — when the opposite is actually needed (diversity vs. focus).
+- Connection to previous lenses — building a cumulative language.
+- A carrying observation question — one open question the user carries with them for a few days.
+- The original natural side — a brief return to how the principle appears in nature itself.
+Breath point.
+
+STAGE 10 — Invitation to practice
+Ask if the user wants to practice the principle through a daily reminder. If yes, define a "principle journey" — each reminder built from three parts: (1) description of the principle, (2) an example from nature, (3) an example of application — translated into the user's domain language. [Note: sending reminders requires site infrastructure; for now, define the structure and offer the option.]
+
+WHAT NOT TO DO
+- Never give generic advice (e.g. "communicate clearly," "build trust").
+- Never skip stages and never rush to a solution before distilling the real need.
+- Never invent examples, names, companies, or studies.
+- Never think on the user's behalf — make them think. The deepening questions are the heart of the engine, not decoration.
+- Never collapse into free-form chat that loses the structure. The conversation serves the flow; it does not dismantle it.
+
+CONTEXT & MEMORY
+This is an ongoing conversation. The user may ask follow-up questions that build on earlier answers in this same thread. Use the full conversation history to stay consistent with the stage you are currently in, deepen prior reasoning, and avoid repeating examples you already gave unless the user explicitly asks to revisit them.
+
+## RESPONSE FORMAT — MANDATORY
+Always respond in the SAME LANGUAGE the user wrote in. Never present more than one or two stages per turn — wait for the user's response to preserve the gradual pace. Structure every response exactly like this, using these section markers:
+
+###STAGE###
+[the stage number and short title, e.g. "1 — Description and understanding"]
+
+###BODY###
+[the full content of this stage/sub-step, written in flowing prose appropriate to the stage — questions, reflections, examples, or an action proposal, as defined by the stage you are in]
+
+###BREATH###
+[the short breath-point question inviting the user to continue, deepen, or confirm — omit only if the stage explicitly ends the engagement]
+
+Keep BODY concise and high-signal, exactly as elegant and economical as nature itself.`;
 
 const AUDIENCES = [
   { id: "manager", label: "מנהל/ת", apiLabel: "a manager", hint: "סוגיות ארגוניות ואסטרטגיות", placeholder: "למשל: אני מרגיש שיש הרבה כאוס בארגון ואני לא מצליח לייצר תחושת יציבות",
@@ -359,19 +416,15 @@ const AUDIENCES = [
 ];
 
 const SECTIONS = [
-  { key: "CHALLENGE", title: "האתגר שהובן", num: "01", color: "#888780" },
-  { key: "FUNCTION", title: "הפונקציה המזוקקת", num: "02", color: "#1D9E75" },
-  { key: "NATURE", title: "מה הטבע כבר פתר", num: "03", color: "#639922" },
-  { key: "TRANSLATION", title: "התרגום היישומי", num: "04", color: "#378ADD" },
-  { key: "QUESTIONS", title: "שאלות להעמקה", num: "05", color: "#7F77DD" },
+  { key: "STAGE", title: "השלב הנוכחי", color: "#1D9E75" },
+  { key: "BODY", title: "", color: "#3A3A37" },
+  { key: "BREATH", title: "נקודת נשימה", color: "#7F77DD" },
 ];
 
 const SECTION_LABELS = {
-  CHALLENGE: "האתגר שהובן",
-  FUNCTION: "הפונקציה המזוקקת",
-  NATURE: "מה הטבע כבר פתר",
-  TRANSLATION: "התרגום היישומי",
-  QUESTIONS: "שאלות להעמקה",
+  STAGE: "השלב הנוכחי",
+  BODY: "תוכן",
+  BREATH: "נקודת נשימה",
 };
 
 // ---- State ----
@@ -453,6 +506,11 @@ function renderAudience() {
 }
 
 // ---- Parse engine response ----
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
 function parseResponse(text) {
   const result = {};
   SECTIONS.forEach(({ key }) => {
@@ -515,7 +573,7 @@ async function handleSubmit() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: "claude-opus-4-8",
         max_tokens: 1500,
         system: SYSTEM_PROMPT,
         messages: apiMessages,
@@ -591,21 +649,28 @@ function appendExchange(userMsg, assistantMsg) {
 
   if (assistantMsg) {
     if (assistantMsg.parsed) {
-      SECTIONS.forEach((s, i) => {
-        const content = assistantMsg.parsed[s.key];
-        if (!content) return;
-        const card = document.createElement("div");
-        card.className = "card";
-        card.style.animationDelay = (i * 0.06) + "s";
-        card.innerHTML =
-          '<div class="card-head">' +
-            '<span class="card-num" style="color:' + s.color + ';background:' + s.color + '14;">' + s.num + '</span>' +
-            '<h3 class="card-title">' + s.title + '</h3>' +
-          '</div>' +
-          '<div class="card-body"></div>';
-        card.querySelector(".card-body").textContent = content;
-        ex.appendChild(card);
-      });
+      const card = document.createElement("div");
+      card.className = "card";
+      const stageLabel = assistantMsg.parsed.STAGE || "";
+      const bodyText = assistantMsg.parsed.BODY || "";
+      const breathText = assistantMsg.parsed.BREATH || "";
+      let html = "";
+      if (stageLabel) {
+        html += '<div class="card-head">' +
+          '<span class="card-num" style="color:#1D9E75;background:#1D9E7514;">●</span>' +
+          '<h3 class="card-title">' + escapeHtml(stageLabel) + '</h3>' +
+        '</div>';
+      }
+      html += '<div class="card-body"></div>';
+      card.innerHTML = html;
+      card.querySelector(".card-body").textContent = bodyText;
+      if (breathText) {
+        const breath = document.createElement("div");
+        breath.className = "card-breath";
+        breath.textContent = breathText;
+        card.appendChild(breath);
+      }
+      ex.appendChild(card);
     } else {
       const card = document.createElement("div");
       card.className = "card";
@@ -616,7 +681,7 @@ function appendExchange(userMsg, assistantMsg) {
   } else {
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = '<div class="card-body thinking pulse">המנוע מזקק את הפונקציה ומחפש בטבע…</div>';
+    card.innerHTML = '<div class="card-body thinking pulse">המנוע מקשיב ומזקק תשובה…</div>';
     ex.appendChild(card);
   }
 
@@ -729,11 +794,9 @@ function buildLog(chat) {
     out += "שאלה:\n" + (lastUser ? lastUser.content : "") + "\n\n";
     out += "תשובת המנוע:\n\n";
     if (m.parsed) {
-      SECTIONS.forEach(s => {
-        const c = m.parsed[s.key];
-        if (!c) return;
-        out += "▸ " + SECTION_LABELS[s.key] + ":\n" + c + "\n\n";
-      });
+      if (m.parsed.STAGE) out += "▸ שלב: " + m.parsed.STAGE + "\n\n";
+      if (m.parsed.BODY) out += m.parsed.BODY + "\n\n";
+      if (m.parsed.BREATH) out += "▸ נקודת נשימה: " + m.parsed.BREATH + "\n\n";
     } else {
       out += (m.raw || m.content || "") + "\n\n";
     }
