@@ -1,7 +1,7 @@
 {
-  "name": "biomimicry-engine",
-  "version": "1.0.0",
-  "description": "Biomimicry thinking engine with server-side chat memory",
+  "name": "nature-wisdom-engine",
+  "version": "2.0.0",
+  "description": "Nature Wisdom Engine — biomimicry-based thinking engine with PostgreSQL-backed chat memory",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +10,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.21.0"
   },
   "optionalDependencies": {
     "dotenv": "^16.4.5"
