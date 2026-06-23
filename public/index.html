@@ -4,290 +4,716 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>מנוע בינת הטבע</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap');
-
   :root {
-    --bg: #f5f3ec;
-    --surface: #ffffff;
-    --ink: #2a241f;
-    --ink-soft: #6b6358;
-    --moss: #4a6b3d;
-    --moss-light: #6b8e5a;
-    --leaf-pale: #e3eddb;
-    --line: #ddd5c7;
-    --user-bubble: #e8f0e0;
-    --shadow: 0 10px 30px -18px rgba(58,47,40,0.45);
+    --bg: #FBFAF7;
+    --surface: #FFFFFF;
+    --border: #E2E0D8;
+    --ink: #2C2C2A;
+    --ink-soft: #5F5E5A;
+    --ink-faint: #A8A69E;
+    --green: #1D9E75;
+    --green-deep: #085041;
+    --green-tint: #E1F5EE;
+    --radius: 14px;
+    --sidebar-w: 288px;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family:'Assistant',system-ui,sans-serif; background:var(--bg);
-    color:var(--ink); height:100vh; display:flex; overflow:hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Assistant', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
+  .ff-serif { font-family: 'Frank Ruhl Libre', serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 1.5rem; }
+  .mobile-only { display: none; }
 
-  /* סרגל צד */
+  /* ---------- Sidebar (chat history) ---------- */
   .sidebar {
-    width:260px; background:var(--surface); border-left:1px solid var(--line);
-    display:flex; flex-direction:column; flex-shrink:0;
+    position: fixed; top: 0; right: 0; bottom: 0; width: var(--sidebar-w);
+    background: var(--surface); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; z-index: 50;
   }
-  .sidebar-head { padding:18px 20px; border-bottom:1px solid var(--line); }
-  .brand { font-size:19px; font-weight:700; color:var(--moss); }
-  .version-tag {
-    display:inline-block; margin-top:6px; font-size:11px; font-weight:600;
-    padding:3px 10px; border-radius:20px; background:var(--leaf-pale); color:var(--moss);
+  .sidebar-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.15rem 1.25rem 0.9rem; border-bottom: 1px solid var(--border);
   }
-  .new-chat {
-    margin:14px 20px; padding:11px; border:none; border-radius:12px;
-    background:var(--moss); color:#fff; font-family:inherit; font-size:14px;
-    font-weight:600; cursor:pointer; transition:background .18s;
+  .sidebar-brand { display: flex; align-items: center; gap: 9px; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 11px; background: var(--green);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  .new-chat:hover { background:var(--moss-light); }
-  .chats-list { flex:1; overflow-y:auto; padding:0 12px; }
-  .chat-item {
-    padding:11px 14px; margin-bottom:5px; border-radius:10px; cursor:pointer;
-    font-size:14px; color:var(--ink-soft); transition:background .15s;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  .brand-mark svg { width: 21px; height: 21px; }
+  .brand-mark.sm { width: 32px; height: 32px; border-radius: 9px; }
+  .brand-mark.sm svg { width: 18px; height: 18px; }
+  .sidebar-brand .ttl { font-size: 14px; font-weight: 600; line-height: 1.2; }
+  .sidebar-brand .sub { font-size: 11px; color: var(--ink-faint); }
+  .sidebar-new {
+    margin: 1rem 1.25rem 0.4rem; display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px; border-radius: 11px; border: none; background: var(--green);
+    color: #fff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s;
   }
-  .chat-item:hover { background:var(--leaf-pale); }
-  .chat-item.active { background:var(--leaf-pale); color:var(--ink); font-weight:600; }
-  .chat-del { opacity:0; font-size:16px; color:var(--ink-soft); transition:opacity .15s; }
-  .chat-item:hover .chat-del { opacity:0.5; }
-  .chat-del:hover { opacity:1; color:#b05050; }
+  .sidebar-new:hover { background: var(--green-deep); }
+  .sidebar-new svg { width: 15px; height: 15px; }
+  .sidebar-section-label {
+    padding: 0.7rem 1.4rem 0.3rem; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: var(--ink-faint);
+  }
+  .chats-list { flex: 1; overflow-y: auto; padding: 0 0.85rem 1.5rem; }
+  .chat-row {
+    display: flex; align-items: flex-start; gap: 8px; padding: 10px 11px; border-radius: 11px;
+    cursor: pointer; transition: background .12s; margin-bottom: 2px;
+  }
+  .chat-row:hover { background: var(--bg); }
+  .chat-row.active { background: var(--green-tint); }
+  .chat-row-main { flex: 1; min-width: 0; }
+  .chat-row-title {
+    font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.4;
+    overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .chat-row-meta { font-size: 11.5px; color: var(--ink-faint); margin-top: 4px; }
+  .chat-del {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent;
+    color: var(--ink-faint); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: all .12s;
+  }
+  .chat-row:hover .chat-del, .chat-row.active .chat-del { opacity: 1; }
+  .chat-del:hover { background: #FCEBEB; color: #A32D2D; }
+  .chat-del svg { width: 14px; height: 14px; }
+  .chats-empty { padding: 1.5rem 1.4rem; text-align: center; color: var(--ink-faint); font-size: 13.5px; line-height: 1.6; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+    border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink-soft); cursor: pointer; transition: all .15s;
+  }
+  .icon-btn:hover { border-color: var(--green); color: var(--green-deep); }
+  .icon-btn svg { width: 15px; height: 15px; }
+  .sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(20,20,18,0.28);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 40;
+  }
+  .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* אזור ראשי */
-  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
-  .thread { flex:1; overflow-y:auto; padding:32px clamp(16px,5vw,80px); }
-  .thread-inner { max-width:760px; margin:0 auto; }
+  /* ---------- Main area ---------- */
+  .main-area { margin-right: var(--sidebar-w); }
 
-  .empty-state { text-align:center; padding-top:14vh; color:var(--ink-soft); }
-  .empty-state h1 { font-size:30px; font-weight:700; color:var(--moss); margin-bottom:12px; }
-  .empty-state p { font-size:16px; font-weight:300; max-width:440px; margin:0 auto; }
-
-  .msg { margin-bottom:24px; display:flex; }
-  .msg.user { justify-content:flex-start; }
-  .msg.assistant { justify-content:flex-start; }
-  .bubble {
-    max-width:100%; padding:16px 20px; border-radius:16px; font-size:15.5px;
-    line-height:1.7; white-space:pre-wrap; word-wrap:break-word;
+  /* Header */
+  header { padding: 2.5rem 0 1.25rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 1.75rem; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .live-badge { display:inline-flex; align-items:center; gap:5px; margin-inline-start:8px; padding:3px 9px;
+    border-radius:999px; background:var(--green-tint); color:var(--green-deep); font-size:11px; font-weight:700; }
+  .live-badge::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .15s;
   }
-  .msg.user .bubble { background:var(--user-bubble); border:1px solid var(--line); }
-  .msg.assistant .bubble { background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow); }
-
-  .loading-dots { display:inline-flex; gap:5px; padding:4px 0; }
-  .loading-dots span {
-    width:8px; height:8px; border-radius:50%; background:var(--moss-light);
-    animation:bounce 1.3s infinite ease-in-out;
+  .pill:hover { border-color: var(--green); color: var(--green-deep); }
+  .pill svg { width: 15px; height: 15px; }
+  .pill .count {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+    padding: 0 5px; border-radius: 999px; background: var(--green-tint); color: var(--green-deep);
+    font-size: 11px; font-weight: 700;
   }
-  .loading-dots span:nth-child(2){ animation-delay:.16s; }
-  .loading-dots span:nth-child(3){ animation-delay:.32s; }
-  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:.5} 40%{transform:scale(1);opacity:1} }
+  h1 { font-size: 36px; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 0.9rem; }
+  h1 .accent { color: var(--green); }
+  .lede { font-size: 17px; color: var(--ink-soft); max-width: 560px; }
 
-  /* אזור קלט */
-  .composer { border-top:1px solid var(--line); background:var(--surface); padding:16px clamp(16px,5vw,80px); }
-  .composer-inner { max-width:760px; margin:0 auto; }
-  .audience-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  /* Audience tabs */
+  .audience { display: flex; gap: 8px; margin: 2.25rem 0 0.75rem; flex-wrap: wrap; }
   .aud-btn {
-    font-family:inherit; font-size:12.5px; font-weight:500; padding:5px 13px;
-    border:1px solid var(--line); border-radius:18px; background:transparent;
-    color:var(--ink-soft); cursor:pointer; transition:all .15s;
+    display: flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all .15s;
   }
-  .aud-btn.active { background:var(--moss); color:#fff; border-color:var(--moss); }
-  .input-row { display:flex; gap:10px; align-items:flex-end; }
-  .input-row textarea {
-    flex:1; resize:none; font-family:inherit; font-size:15px; line-height:1.6;
-    padding:13px 16px; border:1px solid var(--line); border-radius:14px;
-    background:var(--bg); color:var(--ink); max-height:160px; min-height:50px;
+  .aud-btn svg { width: 16px; height: 16px; }
+  .aud-btn.active { border: 1.5px solid var(--green); background: var(--green-tint); color: var(--green-deep); }
+  .aud-hint { font-size: 13px; color: var(--ink-faint); margin-bottom: 1.25rem; }
+
+  /* Input */
+  .input-card {
+    position: relative; background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   }
-  .input-row textarea:focus { outline:none; border-color:var(--moss-light); }
+  textarea {
+    width: 100%; border: none; resize: none; padding: 14px 16px 52px; font-size: 16px;
+    line-height: 1.5; font-family: inherit; background: transparent; color: var(--ink); outline: none;
+  }
   .send-btn {
-    border:none; border-radius:13px; background:var(--moss); color:#fff;
-    width:50px; height:50px; font-size:20px; cursor:pointer; flex-shrink:0;
-    transition:background .18s;
+    position: absolute; bottom: 12px; left: 12px; display: flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 10px; border: none; background: var(--green); color: #fff;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s;
   }
-  .send-btn:hover:not(:disabled) { background:var(--moss-light); }
-  .send-btn:disabled { opacity:.5; cursor:not-allowed; }
+  .send-btn:disabled { background: #C8D6CF; cursor: default; }
+  .send-btn svg { width: 15px; height: 15px; }
+  .hint-row { display: flex; align-items: center; margin: 8px 4px 0; }
+  .kbd-hint { font-size: 12px; color: var(--ink-faint); }
+
   .error-box {
-    background:#f3dede; border:1px solid #d9a0a0; color:#a14a4a;
-    padding:12px 16px; border-radius:12px; font-size:14px; margin-bottom:14px;
+    margin-top: 1rem; padding: 12px 16px; border-radius: 10px;
+    background: #FCEBEB; color: #A32D2D; font-size: 14px;
   }
+
+  .continue-card {
+    position: relative; background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    margin-top: 1.5rem;
+  }
+  .continue-card textarea {
+    width: 100%; border: none; resize: none; padding: 14px 16px 52px; font-size: 15.5px;
+    line-height: 1.5; font-family: inherit; background: transparent; color: var(--ink); outline: none;
+  }
+  .continue-card .send-btn { position: absolute; bottom: 12px; left: 12px; }
+
+  /* Conversation thread */
+  .results { padding: 1rem 0 4rem; }
+  .results-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  }
+  .results-label { font-size: 13px; font-weight: 600; color: var(--green); letter-spacing: 0.02em; }
+  .reset-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--green); color: var(--green-deep); }
+  .reset-btn svg { width: 14px; height: 14px; }
+
+  .exchange { margin-bottom: 1.75rem; }
+  .msg-user {
+    background: var(--green-tint); color: var(--green-deep); border: 1px solid #CDEBE0;
+    border-radius: 13px; padding: 11px 15px; margin-bottom: 1rem; font-size: 15.5px; line-height: 1.6;
+    white-space: pre-wrap; animation: fadeUp .35s ease both;
+  }
+  .msg-user .msg-meta { display: block; margin-top: 6px; font-size: 11px; color: var(--ink-faint); font-weight: 500; }
+
+  .card {
+    margin-bottom: 1rem; background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 1.25rem 1.4rem; animation: fadeUp .5s ease both;
+  }
+  .card-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+  .card-num {
+    font-family: 'Frank Ruhl Libre', serif; font-size: 13px; font-weight: 700;
+    width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .card-title { font-size: 16px; font-weight: 600; }
+  .card-body { font-size: 15.5px; line-height: 1.7; color: #3A3A37; white-space: pre-wrap; }
+  .card-breath {
+    margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border);
+    font-size: 14px; line-height: 1.6; color: var(--green-deep); font-weight: 500;
+  }
+  .thinking { color: var(--ink-faint); font-size: 14px; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+  .pulse { animation: pulse 1.6s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+  /* ---------- Mobile: sidebar becomes a drawer ---------- */
+  @media (max-width: 880px) {
+    .main-area { margin-right: 0; }
+    .sidebar {
+      transform: translateX(100%); transition: transform .25s ease; max-width: 86vw;
+      box-shadow: -8px 0 30px rgba(0,0,0,0.06);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .mobile-only { display: inline-flex; }
+  }
+  @media (max-width: 480px) { h1 { font-size: 29px; } .lede { font-size: 16px; } }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="sidebar-head">
-      <div class="brand">מנוע בינת הטבע</div>
-      <span class="version-tag" id="versionTag">גרסה חיה</span>
-    </div>
-    <button class="new-chat" onclick="newChat()">+ שיחה חדשה</button>
-    <div class="chats-list" id="chatsList"></div>
-  </aside>
 
-  <main class="main">
-    <div class="thread" id="thread">
-      <div class="thread-inner" id="threadInner"></div>
-    </div>
-    <div class="composer">
-      <div class="composer-inner">
-        <div id="errorSlot"></div>
-        <div class="audience-row" id="audienceRow"></div>
-        <div class="input-row">
-          <textarea id="input" placeholder="תאר/י את הסוגיה — למשל: אני רוצה לעשות טבעת לאצבע שמסובבים אותה ומייצרת קול מיוחד" rows="1"></textarea>
-          <button class="send-btn" id="sendBtn" onclick="send()">↑</button>
-        </div>
+<!-- ===== Chat history sidebar (right) ===== -->
+<aside class="sidebar" id="sidebar" aria-label="היסטוריית שיחות">
+  <div class="sidebar-head">
+    <div class="sidebar-brand">
+      <div class="brand-mark sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      </div>
+      <div>
+        <div class="ttl">מנוע בינת הטבע</div>
+        <div class="sub">היסטוריית שיחות</div>
       </div>
     </div>
+    <button class="icon-btn mobile-only" id="closeSidebarBtn" aria-label="סגור">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+  <button class="sidebar-new" id="sidebarNewBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    שיחה חדשה
+  </button>
+  <div class="sidebar-section-label" id="sidebarCountLabel">השיחות שלי</div>
+  <div class="chats-list" id="chatsList"></div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===== Main area ===== -->
+<div class="main-area">
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          </div>
+          <span class="brand-name">מנוע בינת הטבע</span>
+          <span class="live-badge">גרסה חיה</span>
+        </div>
+        <button class="pill mobile-only" id="openSidebarBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          שיחות
+          <span class="count" id="chatsCount">0</span>
+        </button>
+      </div>
+
+      <h1 class="ff-serif">לא עוד תשובה.<br><span class="accent">המנוע שמלמד אותך לראות כמו הטבע.</span></h1>
+      <p class="lede">תאר את האתגר שלך, והמנוע יוביל אותך בשיחה מדורגת: יבין את הסוגיה, יעמיק בשאלות, יזקק איתך את הצורך האמיתי, ויראה לך איך הטבע כבר פתר אותו — עד לעיקרון ולפעולה מעשית. כל שיחה נשמרת מימין, וניתן להמשיך אותה בכל רגע.</p>
+
+      <div class="audience" id="audience" role="tablist" aria-label="בחירת קהל יעד"></div>
+      <p class="aud-hint" id="audHint"></p>
+
+      <div class="input-card" id="mainInputCard">
+        <label class="sr-only" for="prompt">תאר את האתגר שלך</label>
+        <textarea id="prompt" rows="3"></textarea>
+        <button class="send-btn" id="sendBtn">
+          <span id="sendLabel">שלח לטבע</span>
+          <svg id="sendIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        </button>
+      </div>
+      <div class="hint-row" id="mainHintRow">
+        <span class="kbd-hint">Ctrl / ⌘ + Enter לשליחה</span>
+      </div>
+      <div id="errorBox"></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="results" id="results" style="display:none;"></div>
   </main>
+</div>
 
 <script>
-  const MODEL = "claude-opus-4-8";
-  const VARIANT = "live";
+// (system/knowledge now lives on the server — the client sends only messages)
 
-  const AUDIENCES = [
-    { id: "manager",      label: "מנהל",     apiLabel: "a manager" },
-    { id: "engineer",     label: "מהנדס",    apiLabel: "an engineer" },
-    { id: "entrepreneur", label: "יזם",      apiLabel: "an entrepreneur" },
-    { id: "personal",     label: "אדם פרטי", apiLabel: "a private individual" },
-  ];
-  let currentAudience = "entrepreneur";
-  let currentChat = null;
-  let chats = [];
+const VARIANT = "live";
 
-  // ----- אתחול -----
-  function renderAudiences() {
-    document.getElementById("audienceRow").innerHTML = AUDIENCES.map(a =>
-      `<button class="aud-btn ${a.id===currentAudience?'active':''}" onclick="setAudience('${a.id}')">${a.label}</button>`
-    ).join("");
-  }
-  function setAudience(id) { currentAudience = id; renderAudiences(); }
+const AUDIENCES = [
+  { id: "manager", label: "מנהל/ת", apiLabel: "a manager", hint: "סוגיות ארגוניות ואסטרטגיות", placeholder: "למשל: אני מרגיש שיש הרבה כאוס בארגון ואני לא מצליח לייצר תחושת יציבות",
+    icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
+  { id: "engineer", label: "מהנדס/ת", apiLabel: "an engineer", hint: "אתגרי תכנון ועיצוב", placeholder: "למשל: אני צריך לפתח חומר שמפזר אור בצורה מקסימלית ממשטח דק",
+    icon: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/>' },
+  { id: "founder", label: "יזם/ת", apiLabel: "an entrepreneur / startup founder", hint: "בידול, גיוס, ואסטרטגיה עסקית", placeholder: "למשל: אני מפתח משקפיים חכמים שמקרינים מידע על העדשה לגבי מה שהמשתמש רואה — זיהוי אובייקטים, ניווט, תרגום בזמן אמת. השוק מתחיל להתמלא: Meta, Apple, Google. אני צריך למצוא בידול אמיתי שיבדל אותי, ולגייס סבב גדול.",
+    icon: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>' },
+  { id: "personal", label: "אישי", apiLabel: "an individual seeking personal guidance", hint: "שאלות חיים אישיות", placeholder: "למשל: איך אני מוצא שקט נפשי כשהכל סביבי משתנה כל הזמן",
+    icon: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>' },
+];
 
-  async function loadChats() {
-    try {
-      const r = await fetch("/api/chats?variant=" + VARIANT);
-      chats = await r.json();
-      renderChatsList();
-    } catch (e) { chats = []; }
-  }
-  function renderChatsList() {
-    document.getElementById("chatsList").innerHTML = chats.map(c =>
-      `<div class="chat-item ${currentChat&&c.id===currentChat.id?'active':''}" onclick="openChat('${c.id}')">
-        <span>${c.title || "שיחה חדשה"}</span>
-        <span class="chat-del" onclick="event.stopPropagation();delChat('${c.id}')">×</span>
-      </div>`
-    ).join("");
-  }
+const SECTIONS = [
+  { key: "STAGE", title: "השלב הנוכחי", color: "#1D9E75" },
+  { key: "BODY", title: "", color: "#3A3A37" },
+  { key: "BREATH", title: "נקודת נשימה", color: "#7F77DD" },
+];
 
-  function newChat() {
-    currentChat = { id: "chat_" + Date.now(), title: null, messages: [], variant: VARIANT };
-    renderThread(); renderChatsList();
-    document.getElementById("input").focus();
-  }
-  async function openChat(id) {
-    try {
-      const r = await fetch("/api/chats/" + encodeURIComponent(id));
-      currentChat = await r.json();
-      renderThread(); renderChatsList();
-    } catch (e) {}
-  }
-  async function delChat(id) {
-    try { await fetch("/api/chats/" + encodeURIComponent(id), { method:"DELETE" }); } catch(e){}
-    if (currentChat && currentChat.id === id) { currentChat = null; renderThread(); }
-    await loadChats();
-  }
+const SECTION_LABELS = {
+  STAGE: "השלב הנוכחי",
+  BODY: "תוכן",
+  BREATH: "נקודת נשימה",
+};
 
-  async function persistChat() {
-    if (!currentChat) return;
-    try {
-      await fetch("/api/chats/" + encodeURIComponent(currentChat.id), {
-        method:"PUT", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(currentChat),
-      });
-    } catch (e) {}
+// ---- State ----
+let currentAudience = "manager";
+let loading = false;
+let chats = [];
+let activeChatId = null;
+
+// ---- DOM ----
+const audienceEl     = document.getElementById("audience");
+const audHintEl      = document.getElementById("audHint");
+const promptEl       = document.getElementById("prompt");
+const sendBtn        = document.getElementById("sendBtn");
+const sendLabel      = document.getElementById("sendLabel");
+const sendIcon       = document.getElementById("sendIcon");
+const resultsEl      = document.getElementById("results");
+const errorBox       = document.getElementById("errorBox");
+const mainInputCard  = document.getElementById("mainInputCard");
+const mainHintRow    = document.getElementById("mainHintRow");
+const chatsListEl    = document.getElementById("chatsList");
+const chatsCountEl   = document.getElementById("chatsCount");
+const sidebarCountLabel = document.getElementById("sidebarCountLabel");
+const sidebar        = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+const openSidebarBtn = document.getElementById("openSidebarBtn");
+const closeSidebarBtn= document.getElementById("closeSidebarBtn");
+const sidebarNewBtn  = document.getElementById("sidebarNewBtn");
+
+// ---- Persistence (server-side via server.js) ----
+async function loadChats() {
+  try {
+    const r = await fetch("/api/chats?variant=" + VARIANT);
+    if (!r.ok) throw new Error("load failed");
+    const data = await r.json();
+    chats = Array.isArray(data) ? data : [];
+  } catch (e) {
+    chats = [];
+    errorBox.innerHTML = '<div class="error-box">לא ניתן לטעון שיחות מהשרת. ודא שהשרת (server.js) רץ.</div>';
   }
+}
+async function persistChat(chat) {
+  try {
+    await fetch("/api/chats/" + encodeURIComponent(chat.id), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chat),
+    });
+  } catch (e) { /* keep UI responsive; saved again on next change */ }
+}
+async function removeChatOnServer(id) {
+  try { await fetch("/api/chats/" + encodeURIComponent(id), { method: "DELETE" }); }
+  catch (e) { /* ignore */ }
+}
 
-  // ----- תצוגת השיחה -----
-  function renderThread(loading) {
-    const inner = document.getElementById("threadInner");
-    if (!currentChat || currentChat.messages.length === 0) {
-      inner.innerHTML = `<div class="empty-state">
-        <h1>מנוע בינת הטבע</h1>
-        <p>תאר/י סוגיה, והמנוע ילווה אותך צעד אחר צעד — מזיקוק הצורך ועד כיוון פתרון מאומת.</p>
-      </div>`;
-      return;
-    }
-    let html = currentChat.messages.map(m =>
-      `<div class="msg ${m.role}"><div class="bubble">${escapeHtml(m.content)}</div></div>`
-    ).join("");
-    if (loading) {
-      html += `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
-    }
-    inner.innerHTML = html;
-    document.getElementById("thread").scrollTop = 99999;
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function getActiveChat() { return chats.find(c => c.id === activeChatId) || null; }
+function chatTime(c) { return c.updatedAt || (c.updated_at ? new Date(c.updated_at).getTime() : (c.createdAt || 0)); }
+function deriveTitle(text) {
+  const t = text.trim().replace(/\s+/g, " ");
+  return t.length > 46 ? t.slice(0, 46) + "…" : t;
+}
+
+// ---- Audience tabs ----
+function renderAudience() {
+  audienceEl.innerHTML = "";
+  AUDIENCES.forEach(a => {
+    const btn = document.createElement("button");
+    btn.className = "aud-btn" + (a.id === currentAudience ? " active" : "");
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", a.id === currentAudience);
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${a.icon}</svg> ${a.label}`;
+    btn.onclick = () => {
+      currentAudience = a.id;
+      renderAudience();
+      const aud = AUDIENCES.find(x => x.id === a.id);
+      audHintEl.textContent = aud.hint;
+      promptEl.placeholder = aud.placeholder;
+    };
+    audienceEl.appendChild(btn);
+  });
+}
+
+// ---- Parse engine response ----
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+function parseResponse(text) {
+  const result = {};
+  SECTIONS.forEach(({ key }) => {
+    const re = new RegExp("###" + key + "###([\\s\\S]*?)(?=###|$)");
+    const m = text.match(re);
+    result[key] = m ? m[1].trim() : "";
+  });
+  const hasAny = Object.values(result).some(v => v);
+  return hasAny ? result : null;
+}
+
+// ---- Loading UI ----
+function setLoading(on) {
+  loading = on;
+  sendBtn.disabled = on || !promptEl.value.trim();
+  if (on) { sendLabel.textContent = "מזקק..."; sendIcon.classList.add("pulse"); }
+  else    { sendLabel.textContent = "שלח לטבע"; sendIcon.classList.remove("pulse"); }
+}
+
+promptEl.addEventListener("input", () => { sendBtn.disabled = loading || !promptEl.value.trim(); });
+promptEl.addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit();
+});
+sendBtn.onclick = handleSubmit;
+
+// ---- Submit (multi-turn, with memory) ----
+async function handleSubmit() {
+  const question = promptEl.value.trim();
+  if (!question || loading) return;
+  setLoading(true);
+  errorBox.innerHTML = "";
+
+  let chat = getActiveChat();
+  if (!chat) {
+    chat = { id: uid(), title: deriveTitle(question), createdAt: Date.now(), updatedAt: Date.now(), variant: VARIANT, messages: [] };
+    chats.push(chat);
+    activeChatId = chat.id;
   }
-  function escapeHtml(s) {
-    return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-  }
+  if (!chat.title) chat.title = deriveTitle(question);
 
-  // ----- שליחה -----
-  async function send() {
-    const input = document.getElementById("input");
-    const text = input.value.trim();
-    if (!text) return;
-    if (!currentChat) newChat();
+  chat.messages.push({ role: "user", content: question, audience: currentAudience, timestamp: Date.now() });
+  chat.updatedAt = Date.now();
+  promptEl.value = "";
+  await persistChat(chat);
+  renderThread();
+  renderChatsList();
 
-    document.getElementById("errorSlot").innerHTML = "";
-    currentChat.messages.push({ role:"user", content:text, audience:currentAudience });
-    if (!currentChat.title) currentChat.title = text.slice(0, 40);
-    input.value = ""; input.style.height = "auto";
-    renderThread(true);
-    setSending(true);
-
-    // בונים את ההודעות ל-API — מוסיפים תווית קהל להודעת המשתמש
-    const apiMessages = currentChat.messages.map(m => {
+  const apiMessages = chat.messages
+    .filter(m => m.role === "user" || (m.role === "assistant" && m.raw))
+    .map(m => {
       if (m.role === "user") {
-        const aud = AUDIENCES.find(a => a.id === (m.audience||currentAudience)) || AUDIENCES[0];
-        return { role:"user", content:`[The user is ${aud.apiLabel}.]\n\n${m.content}` };
+        const aud = AUDIENCES.find(a => a.id === m.audience) || AUDIENCES[0];
+        return { role: "user", content: `[The user is ${aud.apiLabel}.]\n\n${m.content}` };
       }
-      return { role:"assistant", content:m.content };
+      return { role: "assistant", content: m.raw };
     });
 
-    try {
-      const response = await fetch("/api/ask", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:MODEL, messages:apiMessages }),
-      });
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      const reply = data.content.filter(b => b.type==="text").map(b => b.text).join("\n");
-      currentChat.messages.push({ role:"assistant", content:reply });
-      await persistChat();
-      renderThread();
-      await loadChats();
-    } catch (e) {
-      renderThread();
-      document.getElementById("errorSlot").innerHTML =
-        '<div class="error-box">החיבור למנוע נכשל. בדוק/י את החיבור ונסה/י שוב.</div>';
-    } finally {
-      setSending(false);
+  try {
+    const response = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-opus-4-8",
+        messages: apiMessages,
+      }),
+    });
+    const data = await response.json();
+    const text = data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
+    const parsed = parseResponse(text);
+
+    chat.messages.push({ role: "assistant", content: text, raw: text, parsed: parsed, timestamp: Date.now() });
+    chat.updatedAt = Date.now();
+    await persistChat(chat);
+    renderThread();
+    renderChatsList();
+  } catch (e) {
+    errorBox.innerHTML = '<div class="error-box">החיבור למנוע נכשל. בדוק את החיבור לרשת ונסה שוב.</div>';
+    renderThread();
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ---- Render conversation thread ----
+function renderThread() {
+  const chat = getActiveChat();
+  resultsEl.innerHTML = "";
+
+  if (!chat || chat.messages.length === 0) {
+    resultsEl.style.display = "none";
+    mainInputCard.style.display = "";
+    mainHintRow.style.display = "";
+    return;
+  }
+  resultsEl.style.display = "block";
+  // בזמן שיחה פעילה, תיבת הקלט הראשית מתחלפת בתיבת ההמשך שבתוך ה-thread
+  mainInputCard.style.display = "none";
+  mainHintRow.style.display = "none";
+
+  const head = document.createElement("div");
+  head.className = "results-head";
+  head.innerHTML = '<span class="results-label">תשובת המנוע</span>';
+  resultsEl.appendChild(head);
+
+  let pendingUser = null;
+  let isWaitingForReply = false;
+  chat.messages.forEach(m => {
+    if (m.role === "user") { pendingUser = m; }
+    else { appendExchange(pendingUser, m); pendingUser = null; }
+  });
+  if (pendingUser) { appendExchange(pendingUser, null); isWaitingForReply = true; }
+
+  if (!isWaitingForReply) appendContinueInput();
+
+  const exchanges = resultsEl.querySelectorAll(".exchange");
+  if (exchanges.length) exchanges[exchanges.length - 1].scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ---- Continue-conversation input (appears at the bottom of an active thread) ----
+function appendContinueInput() {
+  const wrap = document.createElement("div");
+  wrap.className = "continue-card";
+  wrap.innerHTML =
+    '<label class="sr-only" for="continuePrompt">המשך את השיחה</label>' +
+    '<textarea id="continuePrompt" rows="2" placeholder="כתוב את תשובתך כאן…"></textarea>' +
+    '<button class="send-btn" id="continueSendBtn">' +
+      '<span>שלח</span>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>' +
+    '</button>';
+  resultsEl.appendChild(wrap);
+
+  const continueEl = wrap.querySelector("#continuePrompt");
+  const continueBtn = wrap.querySelector("#continueSendBtn");
+
+  function submitContinue() {
+    const text = continueEl.value.trim();
+    if (!text || loading) return;
+    promptEl.value = text;
+    continueEl.value = "";
+    handleSubmit();
+  }
+  continueBtn.onclick = submitContinue;
+  continueEl.addEventListener("keydown", e => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitContinue();
+  });
+  if (!loading) continueEl.focus();
+}
+
+function appendExchange(userMsg, assistantMsg) {
+  const ex = document.createElement("div");
+  ex.className = "exchange";
+
+  if (userMsg) {
+    const aud = AUDIENCES.find(a => a.id === userMsg.audience);
+    const u = document.createElement("div");
+    u.className = "msg-user";
+    const time = new Date(userMsg.timestamp).toLocaleString("he-IL", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+    const meta = document.createElement("span");
+    meta.className = "msg-meta";
+    meta.textContent = (aud ? aud.label + " · " : "") + time;
+    u.appendChild(document.createTextNode(userMsg.content));
+    u.appendChild(meta);
+    ex.appendChild(u);
+  }
+
+  if (assistantMsg) {
+    if (assistantMsg.parsed) {
+      const card = document.createElement("div");
+      card.className = "card";
+      const stageLabel = assistantMsg.parsed.STAGE || "";
+      const bodyText = assistantMsg.parsed.BODY || "";
+      const breathText = assistantMsg.parsed.BREATH || "";
+      let html = "";
+      if (stageLabel) {
+        html += '<div class="card-head">' +
+          '<span class="card-num" style="color:#1D9E75;background:#1D9E7514;">●</span>' +
+          '<h3 class="card-title">' + escapeHtml(stageLabel) + '</h3>' +
+        '</div>';
+      }
+      html += '<div class="card-body"></div>';
+      card.innerHTML = html;
+      card.querySelector(".card-body").textContent = bodyText;
+      if (breathText) {
+        const breath = document.createElement("div");
+        breath.className = "card-breath";
+        breath.textContent = breathText;
+        card.appendChild(breath);
+      }
+      ex.appendChild(card);
+    } else {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = '<div class="card-body"></div>';
+      card.querySelector(".card-body").textContent = assistantMsg.raw || assistantMsg.content || "";
+      ex.appendChild(card);
     }
-  }
-  function setSending(on) {
-    document.getElementById("sendBtn").disabled = on;
+  } else {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="card-body thinking pulse">המנוע מקשיב ומזקק תשובה…</div>';
+    ex.appendChild(card);
   }
 
-  // ----- קלט -----
-  const input = document.getElementById("input");
-  input.addEventListener("input", () => {
-    input.style.height = "auto";
-    input.style.height = Math.min(input.scrollHeight, 160) + "px";
-  });
-  input.addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-  });
+  resultsEl.appendChild(ex);
+}
 
-  renderAudiences();
+// ---- New chat / switch / delete ----
+function startNewChat() {
+  activeChatId = null;
+  promptEl.value = "";
+  sendBtn.disabled = true;
+  resultsEl.style.display = "none";
+  mainInputCard.style.display = "";
+  mainHintRow.style.display = "";
+  renderChatsList();
+  closeSidebar();
+  promptEl.focus();
+}
+function openChat(id) {
+  activeChatId = id;
   renderThread();
-  loadChats();
+  renderChatsList();
+  closeSidebar();
+}
+async function deleteChat(id) {
+  await removeChatOnServer(id);
+  chats = chats.filter(c => c.id !== id);
+  if (activeChatId === id) activeChatId = null;
+  if (!getActiveChat()) { resultsEl.style.display = "none"; }
+  else renderThread();
+  renderChatsList();
+}
+
+// ---- Sidebar list ----
+function renderChatsList() {
+  chatsCountEl.textContent = chats.length;
+  sidebarCountLabel.textContent = chats.length ? ("השיחות שלי (" + chats.length + ")") : "השיחות שלי";
+  chatsListEl.innerHTML = "";
+  if (chats.length === 0) {
+    chatsListEl.innerHTML = '<div class="chats-empty">אין עדיין שיחות שמורות.<br>כל שאלה שתשלח תיפתח כשיחה חדשה ותישמר כאן.</div>';
+    return;
+  }
+  const sorted = [...chats].sort((a, b) => chatTime(b) - chatTime(a));
+  sorted.forEach(c => {
+    const qCount = c.messages.filter(m => m.role === "user").length;
+    const time = new Date(chatTime(c)).toLocaleString("he-IL", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+    const row = document.createElement("div");
+    row.className = "chat-row" + (c.id === activeChatId ? " active" : "");
+
+    const main = document.createElement("div");
+    main.className = "chat-row-main";
+    const title = document.createElement("div");
+    title.className = "chat-row-title";
+    title.textContent = c.title || "שיחה ללא כותרת";
+    const meta = document.createElement("div");
+    meta.className = "chat-row-meta";
+    meta.textContent = qCount + " שאלות · " + time;
+    main.appendChild(title);
+    main.appendChild(meta);
+    main.onclick = () => openChat(c.id);
+
+    const del = document.createElement("button");
+    del.className = "chat-del";
+    del.setAttribute("aria-label", "מחק שיחה");
+    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      if (confirm("למחוק את השיחה הזו לצמיתות?")) deleteChat(c.id);
+    };
+
+    row.appendChild(main);
+    row.appendChild(del);
+    chatsListEl.appendChild(row);
+  });
+}
+
+// ---- Sidebar open/close (mobile) ----
+function openSidebar()  { sidebar.classList.add("open"); sidebarOverlay.classList.add("open"); }
+function closeSidebar() { sidebar.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
+
+sidebarNewBtn.onclick   = startNewChat;
+openSidebarBtn.onclick  = openSidebar;
+closeSidebarBtn.onclick = closeSidebar;
+sidebarOverlay.onclick  = closeSidebar;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSidebar(); });
+
+// ---- Init ----
+renderAudience();
+const initAud = AUDIENCES.find(a => a.id === currentAudience);
+audHintEl.textContent = initAud.hint;
+promptEl.placeholder = initAud.placeholder;
+sendBtn.disabled = true;
+(async function init() {
+  await loadChats();
+  renderChatsList();
+  if (getActiveChat()) renderThread();
+})();
 </script>
 </body>
 </html>
