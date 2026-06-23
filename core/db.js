@@ -3,8 +3,11 @@
 //  הגרעין התשתיתי — חיבור, שמירה וטעינה מ-PostgreSQL.
 //  אינו יודע דבר על מהות הטבע. מנהל שיחות בלבד.
 //
-//  הטבלה נוצרת אוטומטית באתחול אם אינה קיימת.
-//  עמודת variant שמורה לעתיד (השוואת גרסאות), כברירת מחדל "live".
+//  הטבלה נוצרת אוטומטית באתחול אם אינה קיימת, וגם עוברת
+//  מיגרציה רכה: אם הטבלה כבר קיימת בלי עמודת variant
+//  (למשל מהשירות הישן), העמודה תתווסף אוטומטית.
+//  שורות ישנות מסומנות 'legacy' כדי לשמור על הפרדה
+//  מהשיחות החדשות ('live'). אין אובדן מידע.
 // ============================================================
 
 const { Pool } = require("pg");
@@ -16,8 +19,9 @@ const pool = new Pool({
     : { rejectUnauthorized: false },
 });
 
-// יצירת הטבלה באתחול
+// יצירת הטבלה + מיגרציה רכה באתחול
 async function initDb() {
+  // 1. יצירה אם אינה קיימת (טבלה חדשה לגמרי תיווצר עם variant מההתחלה)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS chats (
       id          TEXT PRIMARY KEY,
@@ -28,6 +32,15 @@ async function initDb() {
       updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+
+  // 2. מיגרציה רכה לטבלה קיימת שאין בה variant.
+  //    מוסיפים את העמודה ככל-שאינה-קיימת, מסמנים שורות קיימות
+  //    כ-'legacy' (שומר הפרדה מ-'live'), ואז קובעים ברירת מחדל
+  //    'live' לשורות חדשות ואת האילוץ NOT NULL.
+  await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS variant TEXT;`);
+  await pool.query(`UPDATE chats SET variant = 'legacy' WHERE variant IS NULL;`);
+  await pool.query(`ALTER TABLE chats ALTER COLUMN variant SET DEFAULT 'live';`);
+  await pool.query(`ALTER TABLE chats ALTER COLUMN variant SET NOT NULL;`);
 }
 
 // כל השיחות (אפשר לסנן לפי variant)
