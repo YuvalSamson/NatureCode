@@ -1,0 +1,19 @@
+{
+  "name": "nature-engine",
+  "version": "3.0.0",
+  "description": "Nature Wisdom Engine — convergence flow with prompt caching",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.13.1"
+  },
+  "optionalDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

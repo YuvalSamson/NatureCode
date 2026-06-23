@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מנוע בינת הטבע</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #f5f3ec;
+    --surface: #ffffff;
+    --ink: #2a241f;
+    --ink-soft: #6b6358;
+    --moss: #4a6b3d;
+    --moss-light: #6b8e5a;
+    --leaf-pale: #e3eddb;
+    --line: #ddd5c7;
+    --user-bubble: #e8f0e0;
+    --shadow: 0 10px 30px -18px rgba(58,47,40,0.45);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Assistant',system-ui,sans-serif; background:var(--bg);
+    color:var(--ink); height:100vh; display:flex; overflow:hidden;
+  }
+
+  /* סרגל צד */
+  .sidebar {
+    width:260px; background:var(--surface); border-left:1px solid var(--line);
+    display:flex; flex-direction:column; flex-shrink:0;
+  }
+  .sidebar-head { padding:18px 20px; border-bottom:1px solid var(--line); }
+  .brand { font-size:19px; font-weight:700; color:var(--moss); }
+  .version-tag {
+    display:inline-block; margin-top:6px; font-size:11px; font-weight:600;
+    padding:3px 10px; border-radius:20px; background:var(--leaf-pale); color:var(--moss);
+  }
+  .new-chat {
+    margin:14px 20px; padding:11px; border:none; border-radius:12px;
+    background:var(--moss); color:#fff; font-family:inherit; font-size:14px;
+    font-weight:600; cursor:pointer; transition:background .18s;
+  }
+  .new-chat:hover { background:var(--moss-light); }
+  .chats-list { flex:1; overflow-y:auto; padding:0 12px; }
+  .chat-item {
+    padding:11px 14px; margin-bottom:5px; border-radius:10px; cursor:pointer;
+    font-size:14px; color:var(--ink-soft); transition:background .15s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  }
+  .chat-item:hover { background:var(--leaf-pale); }
+  .chat-item.active { background:var(--leaf-pale); color:var(--ink); font-weight:600; }
+  .chat-del { opacity:0; font-size:16px; color:var(--ink-soft); transition:opacity .15s; }
+  .chat-item:hover .chat-del { opacity:0.5; }
+  .chat-del:hover { opacity:1; color:#b05050; }
+
+  /* אזור ראשי */
+  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .thread { flex:1; overflow-y:auto; padding:32px clamp(16px,5vw,80px); }
+  .thread-inner { max-width:760px; margin:0 auto; }
+
+  .empty-state { text-align:center; padding-top:14vh; color:var(--ink-soft); }
+  .empty-state h1 { font-size:30px; font-weight:700; color:var(--moss); margin-bottom:12px; }
+  .empty-state p { font-size:16px; font-weight:300; max-width:440px; margin:0 auto; }
+
+  .msg { margin-bottom:24px; display:flex; }
+  .msg.user { justify-content:flex-start; }
+  .msg.assistant { justify-content:flex-start; }
+  .bubble {
+    max-width:100%; padding:16px 20px; border-radius:16px; font-size:15.5px;
+    line-height:1.7; white-space:pre-wrap; word-wrap:break-word;
+  }
+  .msg.user .bubble { background:var(--user-bubble); border:1px solid var(--line); }
+  .msg.assistant .bubble { background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow); }
+
+  .loading-dots { display:inline-flex; gap:5px; padding:4px 0; }
+  .loading-dots span {
+    width:8px; height:8px; border-radius:50%; background:var(--moss-light);
+    animation:bounce 1.3s infinite ease-in-out;
+  }
+  .loading-dots span:nth-child(2){ animation-delay:.16s; }
+  .loading-dots span:nth-child(3){ animation-delay:.32s; }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:.5} 40%{transform:scale(1);opacity:1} }
+
+  /* אזור קלט */
+  .composer { border-top:1px solid var(--line); background:var(--surface); padding:16px clamp(16px,5vw,80px); }
+  .composer-inner { max-width:760px; margin:0 auto; }
+  .audience-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .aud-btn {
+    font-family:inherit; font-size:12.5px; font-weight:500; padding:5px 13px;
+    border:1px solid var(--line); border-radius:18px; background:transparent;
+    color:var(--ink-soft); cursor:pointer; transition:all .15s;
+  }
+  .aud-btn.active { background:var(--moss); color:#fff; border-color:var(--moss); }
+  .input-row { display:flex; gap:10px; align-items:flex-end; }
+  .input-row textarea {
+    flex:1; resize:none; font-family:inherit; font-size:15px; line-height:1.6;
+    padding:13px 16px; border:1px solid var(--line); border-radius:14px;
+    background:var(--bg); color:var(--ink); max-height:160px; min-height:50px;
+  }
+  .input-row textarea:focus { outline:none; border-color:var(--moss-light); }
+  .send-btn {
+    border:none; border-radius:13px; background:var(--moss); color:#fff;
+    width:50px; height:50px; font-size:20px; cursor:pointer; flex-shrink:0;
+    transition:background .18s;
+  }
+  .send-btn:hover:not(:disabled) { background:var(--moss-light); }
+  .send-btn:disabled { opacity:.5; cursor:not-allowed; }
+  .error-box {
+    background:#f3dede; border:1px solid #d9a0a0; color:#a14a4a;
+    padding:12px 16px; border-radius:12px; font-size:14px; margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="brand">מנוע בינת הטבע</div>
+      <span class="version-tag" id="versionTag">גרסה חיה</span>
+    </div>
+    <button class="new-chat" onclick="newChat()">+ שיחה חדשה</button>
+    <div class="chats-list" id="chatsList"></div>
+  </aside>
+
+  <main class="main">
+    <div class="thread" id="thread">
+      <div class="thread-inner" id="threadInner"></div>
+    </div>
+    <div class="composer">
+      <div class="composer-inner">
+        <div id="errorSlot"></div>
+        <div class="audience-row" id="audienceRow"></div>
+        <div class="input-row">
+          <textarea id="input" placeholder="תאר/י את הסוגיה — למשל: אני רוצה לעשות טבעת לאצבע שמסובבים אותה ומייצרת קול מיוחד" rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="send()">↑</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+  const MODEL = "claude-opus-4-8";
+  const VARIANT = "live";
+
+  const AUDIENCES = [
+    { id: "manager",      label: "מנהל",     apiLabel: "a manager" },
+    { id: "engineer",     label: "מהנדס",    apiLabel: "an engineer" },
+    { id: "entrepreneur", label: "יזם",      apiLabel: "an entrepreneur" },
+    { id: "personal",     label: "אדם פרטי", apiLabel: "a private individual" },
+  ];
+  let currentAudience = "entrepreneur";
+  let currentChat = null;
+  let chats = [];
+
+  // ----- אתחול -----
+  function renderAudiences() {
+    document.getElementById("audienceRow").innerHTML = AUDIENCES.map(a =>
+      `<button class="aud-btn ${a.id===currentAudience?'active':''}" onclick="setAudience('${a.id}')">${a.label}</button>`
+    ).join("");
+  }
+  function setAudience(id) { currentAudience = id; renderAudiences(); }
+
+  async function loadChats() {
+    try {
+      const r = await fetch("/api/chats?variant=" + VARIANT);
+      chats = await r.json();
+      renderChatsList();
+    } catch (e) { chats = []; }
+  }
+  function renderChatsList() {
+    document.getElementById("chatsList").innerHTML = chats.map(c =>
+      `<div class="chat-item ${currentChat&&c.id===currentChat.id?'active':''}" onclick="openChat('${c.id}')">
+        <span>${c.title || "שיחה חדשה"}</span>
+        <span class="chat-del" onclick="event.stopPropagation();delChat('${c.id}')">×</span>
+      </div>`
+    ).join("");
+  }
+
+  function newChat() {
+    currentChat = { id: "chat_" + Date.now(), title: null, messages: [], variant: VARIANT };
+    renderThread(); renderChatsList();
+    document.getElementById("input").focus();
+  }
+  async function openChat(id) {
+    try {
+      const r = await fetch("/api/chats/" + encodeURIComponent(id));
+      currentChat = await r.json();
+      renderThread(); renderChatsList();
+    } catch (e) {}
+  }
+  async function delChat(id) {
+    try { await fetch("/api/chats/" + encodeURIComponent(id), { method:"DELETE" }); } catch(e){}
+    if (currentChat && currentChat.id === id) { currentChat = null; renderThread(); }
+    await loadChats();
+  }
+
+  async function persistChat() {
+    if (!currentChat) return;
+    try {
+      await fetch("/api/chats/" + encodeURIComponent(currentChat.id), {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(currentChat),
+      });
+    } catch (e) {}
+  }
+
+  // ----- תצוגת השיחה -----
+  function renderThread(loading) {
+    const inner = document.getElementById("threadInner");
+    if (!currentChat || currentChat.messages.length === 0) {
+      inner.innerHTML = `<div class="empty-state">
+        <h1>מנוע בינת הטבע</h1>
+        <p>תאר/י סוגיה, והמנוע ילווה אותך צעד אחר צעד — מזיקוק הצורך ועד כיוון פתרון מאומת.</p>
+      </div>`;
+      return;
+    }
+    let html = currentChat.messages.map(m =>
+      `<div class="msg ${m.role}"><div class="bubble">${escapeHtml(m.content)}</div></div>`
+    ).join("");
+    if (loading) {
+      html += `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
+    }
+    inner.innerHTML = html;
+    document.getElementById("thread").scrollTop = 99999;
+  }
+  function escapeHtml(s) {
+    return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
+
+  // ----- שליחה -----
+  async function send() {
+    const input = document.getElementById("input");
+    const text = input.value.trim();
+    if (!text) return;
+    if (!currentChat) newChat();
+
+    document.getElementById("errorSlot").innerHTML = "";
+    currentChat.messages.push({ role:"user", content:text, audience:currentAudience });
+    if (!currentChat.title) currentChat.title = text.slice(0, 40);
+    input.value = ""; input.style.height = "auto";
+    renderThread(true);
+    setSending(true);
+
+    // בונים את ההודעות ל-API — מוסיפים תווית קהל להודעת המשתמש
+    const apiMessages = currentChat.messages.map(m => {
+      if (m.role === "user") {
+        const aud = AUDIENCES.find(a => a.id === (m.audience||currentAudience)) || AUDIENCES[0];
+        return { role:"user", content:`[The user is ${aud.apiLabel}.]\n\n${m.content}` };
+      }
+      return { role:"assistant", content:m.content };
+    });
+
+    try {
+      const response = await fetch("/api/ask", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ model:MODEL, messages:apiMessages }),
+      });
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      const reply = data.content.filter(b => b.type==="text").map(b => b.text).join("\n");
+      currentChat.messages.push({ role:"assistant", content:reply });
+      await persistChat();
+      renderThread();
+      await loadChats();
+    } catch (e) {
+      renderThread();
+      document.getElementById("errorSlot").innerHTML =
+        '<div class="error-box">החיבור למנוע נכשל. בדוק/י את החיבור ונסה/י שוב.</div>';
+    } finally {
+      setSending(false);
+    }
+  }
+  function setSending(on) {
+    document.getElementById("sendBtn").disabled = on;
+  }
+
+  // ----- קלט -----
+  const input = document.getElementById("input");
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 160) + "px";
+  });
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  renderAudiences();
+  renderThread();
+  loadChats();
+</script>
+</body>
+</html>
