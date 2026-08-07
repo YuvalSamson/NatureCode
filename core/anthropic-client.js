@@ -18,18 +18,21 @@ const DEFAULT_MAX_TOKENS = 4096;
  * @param {Object} opts
  * @param {string} opts.apiKey - מפתח ה-API (מהסביבה)
  * @param {string} opts.systemStable - בלוק הידע היציב (נשמר במטמון)
+ * @param {string} [opts.systemVolatile] - הנחיה משתנה (שפה) — מחוץ למטמון
  * @param {Array}  opts.messages - היסטוריית השיחה + ההודעה החדשה
  * @param {string} [opts.model]
  * @param {number} [opts.maxTokens]
  * @returns {Promise<{status:number, data:object}>}
  */
-async function askClaude({ apiKey, systemStable, messages, model, maxTokens }) {
+async function askClaude({ apiKey, systemStable, systemVolatile, messages, model, maxTokens }) {
   if (!apiKey) {
     return { status: 500, data: { error: "Missing ANTHROPIC_API_KEY on the server" } };
   }
 
   // בלוק ה-system כמערך: הבלוק היציב מסומן ב-cache_control.
   // כל מה שלפני הסימון (כאן: בלוק הידע כולו) נשמר במטמון.
+  //  סדר חשוב: הבלוק היציב ראשון ומסומן במטמון. הנחיית השפה נוספת
+  //  אחריו בלי סימון — כך החלפת שפה אינה פוסלת את המטמון של הידע.
   const system = [
     {
       type: "text",
@@ -37,6 +40,9 @@ async function askClaude({ apiKey, systemStable, messages, model, maxTokens }) {
       cache_control: { type: "ephemeral" },
     },
   ];
+  if (systemVolatile) {
+    system.push({ type: "text", text: systemVolatile });
+  }
 
   const body = {
     model: model || DEFAULT_MODEL,
