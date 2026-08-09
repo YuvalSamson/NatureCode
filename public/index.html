@@ -71,6 +71,11 @@
     max-width:100%; padding:16px 20px; border-radius:16px; font-size:15.5px;
     line-height:1.7; white-space:pre-wrap; word-wrap:break-word;
   }
+  .bubble a {
+    color:var(--moss); text-decoration:underline; text-underline-offset:3px;
+    text-decoration-thickness:1.5px; font-weight:600;
+  }
+  .bubble a:hover { color:var(--moss-light); }
   .msg.user .bubble { background:var(--user-bubble); border:1px solid var(--line); }
   .msg.assistant .bubble { background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow); }
 
@@ -152,16 +157,16 @@
       label: "English", dir: "ltr", docTitle: "Nature Code",
       brand: "Nature Code", newChat: "+ New chat", untitled: "New conversation",
       emptyTitle: "Nature Code",
-      emptyText: "What are you building — and what's stuck? Describe it in a line or two, and we'll take it from there.",
-      placeholder: "What are you building, and what's stuck?",
+      emptyText: "Describe your challenge.",
+      placeholder: "Describe your challenge...",
       error: "Couldn't reach the engine. Check your connection and try again.",
     },
     he: {
       label: "עברית", dir: "rtl", docTitle: "מנוע בינת הטבע",
       brand: "מנוע בינת הטבע", newChat: "+ שיחה חדשה", untitled: "שיחה חדשה",
       emptyTitle: "מנוע בינת הטבע",
-      emptyText: "מה אתם בונים — ומה תקוע? תארו בשורה או שתיים, ונצא לדרך.",
-      placeholder: "מה אתם בונים, ומה תקוע?",
+      emptyText: "תארו את האתגר שלכם.",
+      placeholder: "תארו את האתגר שלכם...",
       error: "החיבור למנוע נכשל. בדקו את החיבור ונסו שוב.",
     },
   };
@@ -256,7 +261,7 @@
       return;
     }
     let html = currentChat.messages.map(m =>
-      `<div class="msg ${m.role}"><div class="bubble">${escapeHtml(m.content)}</div></div>`
+      `<div class="msg ${m.role}"><div class="bubble">${formatContent(m.content)}</div></div>`
     ).join("");
     if (loading) {
       html += `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
@@ -266,6 +271,16 @@
   }
   function escapeHtml(s) {
     return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
+
+  //  ממיר טקסט לתצוגה: בורח מ-HTML קודם, ורק אז הופך תחביר מרקדאון
+  //  לקישורים לחיצים ולהדגשה. רק http/https מותרים — הגנה מפני הזרקה.
+  function formatContent(raw) {
+    let out = escapeHtml(raw);
+    out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      (m, text, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`);
+    out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    return out;
   }
 
   // ----- שליחה -----
