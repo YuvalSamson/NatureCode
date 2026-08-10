@@ -9,7 +9,7 @@ const path = require("path");
 
 try { require("dotenv").config(); } catch (e) { /* dotenv optional */ }
 
-const { askClaude, DEFAULT_MODEL, DEFAULT_MAX_TOKENS } = require("./core/anthropic-client");
+const { askClaude, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_THINKING_BUDGET } = require("./core/anthropic-client");
 const { initDb, getChats, getChat, upsertChat, deleteChat } = require("./core/db");
 const { loadKnowledge, getKnowledge, reloadKnowledge } = require("./core/knowledge-loader");
 
@@ -79,9 +79,15 @@ const DEFAULT_LANGUAGE = "en";
 
 app.post("/api/ask", async (req, res) => {
   try {
-    const { messages, model, maxTokens, lang } = req.body;
+    const { messages, model, maxTokens, lang, thinkingBudget, webSearch } = req.body;
     if (!Array.isArray(messages)) {
-      return res.status(400).json({ error: "messages array is required" });
+      return res.status(400).json({ error: { type: "bad_request", message: "messages array is required" } });
+    }
+    if (!ANTHROPIC_API_KEY) {
+      console.error("ASK FAILED: ANTHROPIC_API_KEY is not set on the server");
+      return res.status(500).json({
+        error: { type: "config_error", message: "ANTHROPIC_API_KEY is not set on the server" },
+      });
     }
     const langName = LANGUAGES[lang] || LANGUAGES[DEFAULT_LANGUAGE];
     const systemStable = getKnowledge();
@@ -96,10 +102,18 @@ app.post("/api/ask", async (req, res) => {
       messages,
       model: model || DEFAULT_MODEL,
       maxTokens: maxTokens || DEFAULT_MAX_TOKENS,
+      thinkingBudget: thinkingBudget === undefined ? DEFAULT_THINKING_BUDGET : thinkingBudget,
+      webSearch: webSearch !== false,
     });
+    //  רישום שגיאות במפורש — בלי זה אי אפשר לאבחן תקלה בפריסה.
+    if (result.status < 200 || result.status >= 300) {
+      console.error("ASK FAILED:", result.status,
+        JSON.stringify(result.data && result.data.error) || "(no error body)");
+    }
     res.status(result.status).json(result.data);
   } catch (e) {
-    res.status(502).json({ error: "ask failed", detail: String(e) });
+    console.error("ASK EXCEPTION:", String(e));
+    res.status(502).json({ error: { type: "server_error", message: String(e) } });
   }
 });
 
