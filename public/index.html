@@ -42,18 +42,42 @@
     font-weight:600; cursor:pointer; transition:background .18s;
   }
   .new-chat:hover { background:var(--moss-light); }
+  .chat-search-wrap { padding:0 20px 10px; }
+  .chat-search {
+    width:100%; font-family:inherit; font-size:13px; padding:8px 12px;
+    border:1px solid var(--line); border-radius:10px; background:var(--bg);
+    color:var(--ink); outline:none;
+  }
+  .chat-search:focus { border-color:var(--moss-light); }
   .chats-list { flex:1; overflow-y:auto; padding:0 12px; }
+  .chat-group-label {
+    font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.65; padding:12px 10px 6px;
+  }
+  .chat-group-label:first-child { padding-top:2px; }
   .chat-item {
-    padding:11px 14px; margin-bottom:5px; border-radius:10px; cursor:pointer;
-    font-size:14px; color:var(--ink-soft); transition:background .15s;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    padding:9px 14px; margin-bottom:3px; border-radius:10px; cursor:pointer;
+    color:var(--ink-soft); transition:background .15s;
     display:flex; justify-content:space-between; align-items:center; gap:8px;
   }
   .chat-item:hover { background:var(--leaf-pale); }
   .chat-item.active { background:var(--leaf-pale); color:var(--ink); font-weight:600; }
-  .chat-del { opacity:0; font-size:16px; color:var(--ink-soft); transition:opacity .15s; }
+  .chat-item-main { min-width:0; flex:1; }
+  .chat-item-title {
+    font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .chat-item-meta { font-size:11px; color:var(--ink-soft); opacity:.6; margin-top:1px; }
+  .chat-del { opacity:0; font-size:16px; color:var(--ink-soft); transition:opacity .15s; flex-shrink:0; }
   .chat-item:hover .chat-del { opacity:0.5; }
   .chat-del:hover { opacity:1; color:#b05050; }
+  .chats-empty, .chats-error, .chats-loading {
+    padding:14px 10px; font-size:13px; color:var(--ink-soft); opacity:.75; line-height:1.6;
+  }
+  .chats-error { color:#a14a4a; opacity:1; }
+  .chats-error button {
+    display:block; margin-top:6px; font-family:inherit; font-size:12.5px; font-weight:600;
+    color:var(--moss); background:none; border:none; cursor:pointer; padding:0;
+  }
 
   /* אזור ראשי */
   .main { flex:1; display:flex; flex-direction:column; min-width:0; }
@@ -70,6 +94,30 @@
   .bubble {
     max-width:100%; padding:16px 20px; border-radius:16px; font-size:15.5px;
     line-height:1.7; white-space:pre-wrap; word-wrap:break-word;
+  }
+  /* פאנל החשיבה */
+  .think {
+    margin-bottom:10px; border:1px solid var(--line); border-radius:12px;
+    background:#faf8f2; overflow:hidden;
+  }
+  .think-head {
+    padding:9px 14px; font-size:13px; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; display:flex; align-items:center; gap:7px; user-select:none;
+  }
+  .think-head:hover { color:var(--moss); }
+  .think-arrow { transition:transform .18s; font-size:10px; }
+  .think.open .think-arrow { transform:rotate(90deg); }
+  .think-body {
+    display:none; padding:0 16px 14px; font-size:13.5px; line-height:1.75;
+    color:var(--ink-soft); white-space:pre-wrap; border-top:1px solid var(--line);
+    padding-top:12px; max-height:420px; overflow-y:auto;
+  }
+  .think.open .think-body { display:block; }
+  .search-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .chip {
+    font-size:11.5px; padding:4px 11px; border-radius:14px;
+    background:var(--leaf-pale); color:var(--moss); font-weight:500;
+    display:inline-flex; align-items:center; gap:5px;
   }
   .bubble a {
     color:var(--moss); text-decoration:underline; text-underline-offset:3px;
@@ -128,6 +176,9 @@
       </div>
     </div>
     <button class="new-chat" id="newChatBtn" onclick="newChat()">+ New chat</button>
+    <div class="chat-search-wrap">
+      <input class="chat-search" id="chatSearch" oninput="renderChatsList()" placeholder="">
+    </div>
     <div class="chats-list" id="chatsList"></div>
   </aside>
 
@@ -160,6 +211,17 @@
       emptyText: "Describe your challenge.",
       placeholder: "Describe your challenge...",
       error: "Couldn't reach the engine. Check your connection and try again.",
+      thinkingLabel: "How I worked this out",
+      searching: "Checking sources...",
+      chatSearchPlaceholder: "Search conversations",
+      chatsLoading: "Loading conversations...",
+      chatsError: "Couldn't load your conversations.",
+      retry: "Retry",
+      noChats: "No conversations yet.",
+      noMatches: "No conversations match.",
+      groupToday: "Today", groupYesterday: "Yesterday",
+      groupWeek: "This week", groupOlder: "Older",
+      timeJustNow: "now", timeMinShort: "m", timeHourShort: "h", timeDayShort: "d",
     },
     he: {
       label: "עברית", dir: "rtl", docTitle: "מנוע בינת הטבע",
@@ -168,6 +230,17 @@
       emptyText: "תארו את האתגר שלכם.",
       placeholder: "תארו את האתגר שלכם...",
       error: "החיבור למנוע נכשל. בדקו את החיבור ונסו שוב.",
+      thinkingLabel: "איך הגעתי לזה",
+      searching: "בודק מקורות...",
+      chatSearchPlaceholder: "חיפוש בשיחות",
+      chatsLoading: "טוען שיחות...",
+      chatsError: "טעינת השיחות נכשלה.",
+      retry: "נסה שוב",
+      noChats: "עדיין אין שיחות.",
+      noMatches: "אין שיחות תואמות.",
+      groupToday: "היום", groupYesterday: "אתמול",
+      groupWeek: "השבוע", groupOlder: "ישן יותר",
+      timeJustNow: "עכשיו", timeMinShort: " דק'", timeHourShort: " שע'", timeDayShort: " ימים",
     },
   };
   const DEFAULT_LANG = "en";
@@ -191,6 +264,7 @@
     document.getElementById("brandLabel").textContent = t.brand;
     document.getElementById("newChatBtn").textContent = t.newChat;
     document.getElementById("input").placeholder = t.placeholder;
+    document.getElementById("chatSearch").placeholder = t.chatSearchPlaceholder;
     renderThread(); renderChatsList();
   }
   function setLang(code) {
@@ -206,20 +280,102 @@
     buildLangSelect(); applyLang();
   }
 
+  let chatsError = null;
+  let chatsLoading = true;
+
+  //  טוען את כל היסטוריית השיחות. שגיאה מוצגת בסרגל במקום להיבלע בשקט —
+  //  אחרת "אין שיחות" ו"נכשלה הטעינה" נראים אותו דבר למשתמש.
   async function loadChats() {
+    chatsLoading = true; chatsError = null; renderChatsList();
     try {
       const r = await fetch("/api/chats?variant=" + VARIANT);
+      if (!r.ok) throw new Error("HTTP " + r.status);
       chats = await r.json();
-      renderChatsList();
-    } catch (e) { chats = []; }
+      if (!Array.isArray(chats)) throw new Error("unexpected response shape");
+    } catch (e) {
+      chats = [];
+      chatsError = (e && e.message) ? String(e.message) : "load failed";
+      console.error("loadChats failed:", e);
+    } finally {
+      chatsLoading = false; renderChatsList();
+    }
   }
+
+  //  מקבצת שיחות לפי זמן עדכון: היום / אתמול / השבוע / קודם.
+  function groupChats(list) {
+    const now = new Date();
+    const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const today = startOfDay(now);
+    const yesterday = today - 86400000;
+    const weekAgo = today - 6 * 86400000;
+    const groups = { today: [], yesterday: [], week: [], older: [] };
+    list.forEach(c => {
+      const t = c.updated_at ? new Date(c.updated_at).getTime() : 0;
+      const day = startOfDay(new Date(t));
+      if (day === today) groups.today.push(c);
+      else if (day === yesterday) groups.yesterday.push(c);
+      else if (day >= weekAgo) groups.week.push(c);
+      else groups.older.push(c);
+    });
+    return groups;
+  }
+
+  function relTime(iso) {
+    if (!iso) return "";
+    const diff = Date.now() - new Date(iso).getTime();
+    const t = T();
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return t.timeJustNow;
+    if (min < 60) return min + t.timeMinShort;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + t.timeHourShort;
+    const day = Math.floor(hr / 24);
+    return day + t.timeDayShort;
+  }
+
   function renderChatsList() {
-    document.getElementById("chatsList").innerHTML = chats.map(c =>
-      `<div class="chat-item ${currentChat&&c.id===currentChat.id?'active':''}" onclick="openChat('${c.id}')">
-        <span>${c.title || T().untitled}</span>
-        <span class="chat-del" onclick="event.stopPropagation();delChat('${c.id}')">×</span>
-      </div>`
-    ).join("");
+    const el = document.getElementById("chatsList");
+    const q = (document.getElementById("chatSearch").value || "").trim().toLowerCase();
+
+    if (chatsLoading) {
+      el.innerHTML = `<div class="chats-loading">${T().chatsLoading}</div>`;
+      return;
+    }
+    if (chatsError) {
+      el.innerHTML = `<div class="chats-error">${T().chatsError}<button onclick="loadChats()">${T().retry}</button></div>`;
+      return;
+    }
+
+    const filtered = q
+      ? chats.filter(c => (c.title || T().untitled).toLowerCase().includes(q))
+      : chats;
+
+    if (filtered.length === 0) {
+      el.innerHTML = `<div class="chats-empty">${q ? T().noMatches : T().noChats}</div>`;
+      return;
+    }
+
+    const groups = groupChats(filtered);
+    const sections = [
+      ["today", T().groupToday], ["yesterday", T().groupYesterday],
+      ["week", T().groupWeek], ["older", T().groupOlder],
+    ];
+
+    let html = "";
+    sections.forEach(([key, label]) => {
+      const items = groups[key];
+      if (!items.length) return;
+      html += `<div class="chat-group-label">${label}</div>`;
+      html += items.map(c => `
+        <div class="chat-item ${currentChat && c.id === currentChat.id ? "active" : ""}" onclick="openChat('${c.id}')">
+          <div class="chat-item-main">
+            <div class="chat-item-title">${escapeHtml(c.title || T().untitled)}</div>
+            <div class="chat-item-meta">${relTime(c.updated_at)}</div>
+          </div>
+          <span class="chat-del" onclick="event.stopPropagation();delChat('${c.id}')">×</span>
+        </div>`).join("");
+    });
+    el.innerHTML = html;
   }
 
   function newChat() {
@@ -230,9 +386,14 @@
   async function openChat(id) {
     try {
       const r = await fetch("/api/chats/" + encodeURIComponent(id));
+      if (!r.ok) throw new Error("HTTP " + r.status);
       currentChat = await r.json();
       renderThread(); renderChatsList();
-    } catch (e) {}
+    } catch (e) {
+      console.error("openChat failed:", e);
+      document.getElementById("errorSlot").innerHTML =
+        '<div class="error-box">' + T().chatsError + '</div>';
+    }
   }
   async function delChat(id) {
     try { await fetch("/api/chats/" + encodeURIComponent(id), { method:"DELETE" }); } catch(e){}
@@ -260,11 +421,28 @@
       </div>`;
       return;
     }
-    let html = currentChat.messages.map(m =>
-      `<div class="msg ${m.role}"><div class="bubble">${formatContent(m.content)}</div></div>`
-    ).join("");
+    let html = currentChat.messages.map((m, i) => {
+      let extra = "";
+      if (m.role === "assistant") {
+        if (m.searches && m.searches.length) {
+          extra += `<div class="search-chips">` +
+            m.searches.map(q => `<span class="chip">\u2315 ${escapeHtml(q)}</span>`).join("") +
+            `</div>`;
+        }
+        if (m.thinking) {
+          extra += `<div class="think" id="think${i}">
+            <div class="think-head" onclick="document.getElementById('think${i}').classList.toggle('open')">
+              <span class="think-arrow">\u25B6</span><span>${T().thinkingLabel}</span>
+            </div>
+            <div class="think-body">${escapeHtml(m.thinking)}</div>
+          </div>`;
+        }
+      }
+      return `<div class="msg ${m.role}">${extra ? `<div style="max-width:100%">${extra}<div class="bubble">${formatContent(m.content)}</div></div>` : `<div class="bubble">${formatContent(m.content)}</div>`}</div>`;
+    }).join("");
     if (loading) {
-      html += `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
+      html += `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div>
+        <div style="font-size:12.5px;color:var(--ink-faint);margin-top:6px">${T().searching}</div></div></div>`;
     }
     inner.innerHTML = html;
     document.getElementById("thread").scrollTop = 99999;
@@ -309,16 +487,38 @@
         body: JSON.stringify({ model:MODEL, messages:apiMessages, lang }),
       });
       const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      const reply = data.content.filter(b => b.type==="text").map(b => b.text).join("\n");
-      currentChat.messages.push({ role:"assistant", content:reply });
+      if (data.error) {
+        //  data.error הוא אובייקט: {type, message}. בלי החילוץ הזה
+        //  המשתמש רואה "[object Object]" ואי אפשר לאבחן דבר.
+        const em = (typeof data.error === "string")
+          ? data.error
+          : (data.error.message || data.error.type || JSON.stringify(data.error));
+        throw new Error(em);
+      }
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+      const blocks = data.content || [];
+      const reply = blocks.filter(b => b.type==="text").map(b => b.text).join("\n");
+      const thinking = blocks.filter(b => b.type==="thinking")
+                             .map(b => b.thinking || "").join("\n\n").trim();
+      const searches = blocks
+        .filter(b => b.type==="server_tool_use" && b.name==="web_search")
+        .map(b => (b.input && b.input.query) || "")
+        .filter(Boolean);
+      currentChat.messages.push({ role:"assistant", content:reply, thinking, searches });
       await persistChat();
       renderThread();
       await loadChats();
     } catch (e) {
       renderThread();
+      const detail = (e && e.message) ? String(e.message) : "";
       document.getElementById("errorSlot").innerHTML =
-        '<div class="error-box">' + T().error + '</div>';
+        '<div class="error-box">' + T().error +
+        (detail ? '<div style="margin-top:7px;font-size:12.5px;opacity:.85;direction:ltr;text-align:left">'
+                  + escapeHtml(detail) + '</div>' : '') +
+        '</div>';
+      console.error("Engine request failed:", e);
     } finally {
       setSending(false);
     }
