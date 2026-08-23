@@ -47,8 +47,8 @@ async function initDb() {
   `);
 
   // 2. מיגרציה רכה לטבלה קיימת שאין בה variant.
-  //    שורות קיימות מסומנות 'legacy' כדי לשמור הפרדה
-  //    מהשיחות החדשות ('live').
+  //    כל השורות מאוחדות ל-'live' כדי שכל ההיסטוריה תוצג,
+  //    כולל שיחות שנשמרו לפני שהעמודה נוספה.
   await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS variant TEXT;`);
   await pool.query(`UPDATE chats SET variant = 'live' WHERE variant IS NULL OR variant = 'legacy';`);
   await pool.query(`ALTER TABLE chats ALTER COLUMN variant SET DEFAULT 'live';`);
@@ -105,9 +105,15 @@ async function getChat(id) {
   return rows[0] || null;
 }
 
-// שמירה/עדכון שיחה (upsert)
+//  שמירה/עדכון שיחה (upsert).
+//  touch קובע אם הפעולה נחשבת פעילות בשיחה. הודעה חדשה או תשובה
+//  שהתקבלה — כן, ולכן השיחה עולה לראש הרשימה. שינוי שם אינו
+//  פעילות בתוכן אלא תיקון תווית, ולכן הדף שולח touch=false
+//  והמיקום היחסי ברשימה נשמר. ברירת המחדל היא כן לעדכן, כדי
+//  שכל קריאה קיימת תתנהג בדיוק כמו קודם.
 async function upsertChat(chat) {
-  const { id, title, messages, variant } = chat;
+  const { id, title, messages, variant, touch } = chat;
+  const bump = touch !== false;
   try {
     await pool.query(
       `INSERT INTO chats (id, title, messages, variant, updated_at)
@@ -116,14 +122,14 @@ async function upsertChat(chat) {
          SET title = EXCLUDED.title,
              messages = EXCLUDED.messages,
              variant = EXCLUDED.variant,
-             updated_at = now()`,
-      [id, title || null, JSON.stringify(messages || []), variant || "live"]
+             updated_at = CASE WHEN $5 THEN now() ELSE chats.updated_at END`,
+      [id, title || null, JSON.stringify(messages || []), variant || "live", bump]
     );
   } catch (e) {
     //  בלי הדפסה מפורשת כאן, כשל כתיבה נבלע והמסוף שותק
     //  בזמן שהדף מציג שגיאה כללית. זה מה שהקשה על האבחון.
     console.error("UPSERT FAILED:", e.message);
-    console.error("  chat id:", id, "| variant:", variant || "live");
+    console.error("  chat id:", id, "| variant:", variant || "live", "| touch:", bump);
     throw e;
   }
 }

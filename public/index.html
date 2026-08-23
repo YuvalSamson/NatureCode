@@ -66,7 +66,46 @@
   .chat-item-title {
     font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  .chat-item-meta { font-size:11px; color:var(--ink-soft); opacity:.6; margin-top:1px; }
+  .chat-item-meta {
+    font-size:11px; color:var(--ink); opacity:.62; margin-top:2px;
+    /* התאריך עצמו נשאר LTR כדי שיום/חודש/שנה לא יתהפכו,
+       אבל היישור הולך לפי שפת הממשק — לימין בעברית. */
+    direction:ltr; unicode-bidi:embed; text-align:left;
+  }
+  [dir="rtl"] .chat-item-meta { text-align:right; }
+  .chat-item:hover .chat-item-meta, .chat-item.active .chat-item-meta { opacity:.78; }
+  /* לוח הגרסאות — שלוש שורות, כל אחת עם תווית ומקור משלה */
+  .versions { margin-top:10px; display:flex; flex-direction:column; gap:3px; }
+  .ver-row {
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:10.5px; line-height:1.5;
+  }
+  .ver-label { color:var(--ink-soft); opacity:.8; white-space:nowrap; }
+  .ver-value {
+    font-weight:700; color:var(--moss); background:var(--leaf-pale);
+    border-radius:8px; padding:1px 7px; direction:ltr; unicode-bidi:embed;
+    white-space:nowrap;
+  }
+  .ver-value.pending { color:var(--ink-soft); background:transparent; font-weight:600; }
+  .chat-rename-input {
+    width:100%; font-family:inherit; font-size:14px; color:var(--ink);
+    padding:2px 6px; border:1px solid var(--moss-light); border-radius:6px;
+    background:var(--surface); outline:none; box-sizing:border-box;
+  }
+  /* תפריט הקשר על כותרת שיחה */
+  .ctx-menu {
+    position:fixed; z-index:100; display:none; min-width:150px;
+    background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    box-shadow:var(--shadow); padding:5px; overflow:hidden;
+  }
+  .ctx-menu.show { display:block; }
+  .ctx-item {
+    display:block; width:100%; text-align:start; font-family:inherit;
+    font-size:13.5px; color:var(--ink); background:transparent; border:none;
+    padding:8px 12px; border-radius:7px; cursor:pointer;
+  }
+  .ctx-item:hover { background:var(--leaf-pale); }
+  .ctx-item.danger { color:#b05050; }
   .chat-del { opacity:0; font-size:16px; color:var(--ink-soft); transition:opacity .15s; flex-shrink:0; }
   .chat-item:hover .chat-del { opacity:0.5; }
   .chat-del:hover { opacity:1; color:#b05050; }
@@ -82,6 +121,7 @@
   /* אזור ראשי */
   .main { flex:1; display:flex; flex-direction:column; min-width:0; }
   .thread { flex:1; overflow-y:auto; padding:32px clamp(16px,5vw,80px); }
+  .thread-wrap { flex:1; position:relative; display:flex; min-height:0; }
   .thread-inner { max-width:760px; margin:0 auto; }
 
   .empty-state { text-align:center; padding-top:14vh; color:var(--ink-soft); }
@@ -169,7 +209,25 @@
     color:var(--ink-soft); cursor:pointer;
   }
   .lang-select:hover { border-color:var(--moss-light); }
-  .input-row { display:flex; gap:10px; align-items:flex-end; }
+  .input-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  /* בורר המודל — יושב בצד ההפוך לכפתור השליחה, ומתהפך אוטומטית ב-RTL */
+  .model-group { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+  .model-btn {
+    font-family:inherit; font-size:12px; font-weight:600; white-space:nowrap;
+    padding:8px 12px; border:1px solid var(--line); border-radius:16px;
+    background:transparent; color:var(--ink-soft); cursor:pointer;
+    transition:background .18s, border-color .18s, color .18s;
+  }
+  .model-btn:hover:not(.active):not(:disabled) { border-color:var(--moss-light); color:var(--ink); }
+  .model-btn.active { background:var(--moss); border-color:var(--moss); color:#fff; }
+  .model-btn:disabled { opacity:.45; cursor:not-allowed; }
+  /* במסך צר הבורר עובר לשורה משלו במקום לדחוס את תיבת הכתיבה */
+  @media (max-width:640px) { .model-group { flex-basis:100%; } }
+  .model-tag {
+    display:inline-block; font-size:11px; font-weight:600; letter-spacing:.02em;
+    color:var(--ink-soft); border:1px solid var(--line); border-radius:10px;
+    padding:2px 8px; margin-bottom:6px; direction:ltr;
+  }
   .input-row textarea {
     flex:1; resize:none; font-family:inherit; font-size:15px; line-height:1.6;
     padding:13px 16px; border:1px solid var(--line); border-radius:14px;
@@ -183,6 +241,22 @@
   }
   .send-btn:hover:not(:disabled) { background:var(--moss-light); }
   .send-btn:disabled { opacity:.5; cursor:not-allowed; }
+  /* כפתור חזרה לתחתית — מופיע רק כשהגלילה האוטומטית מושהית */
+  .resume-scroll {
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    z-index:5; display:none; align-items:center; gap:8px;
+    font-family:inherit; font-size:12.5px; font-weight:600;
+    padding:9px 16px; border:1px solid var(--moss); border-radius:20px;
+    background:var(--moss); color:#fff;
+    box-shadow:var(--shadow); cursor:pointer;
+  }
+  .resume-scroll.show { display:flex; }
+  .resume-scroll:hover { background:var(--moss-light); border-color:var(--moss-light); }
+  .resume-dot {
+    width:7px; height:7px; border-radius:50%; background:#fff;
+    animation:pulse 1.4s infinite ease-in-out; flex-shrink:0;
+  }
+  .resume-arrow { font-size:13px; opacity:.9; }
   .error-box {
     background:#f3dede; border:1px solid #d9a0a0; color:#a14a4a;
     padding:12px 16px; border-radius:12px; font-size:14px; margin-bottom:14px;
@@ -193,7 +267,7 @@
   <aside class="sidebar">
     <div class="sidebar-head">
       <div class="brand" id="brandLabel">Nature Code</div>
-      <span class="version-tag" id="versionTag">v4</span>
+      <div class="versions" id="versions"></div>
       <div class="lang-row">
         <select class="lang-select" id="langSelect" onchange="setLang(this.value)"></select>
       </div>
@@ -206,13 +280,21 @@
   </aside>
 
   <main class="main">
-    <div class="thread" id="thread">
-      <div class="thread-inner" id="threadInner"></div>
+    <div class="thread-wrap">
+      <div class="thread" id="thread">
+        <div class="thread-inner" id="threadInner"></div>
+      </div>
+      <button class="resume-scroll" id="resumeScroll" onclick="resumeAutoScroll()">
+        <span class="resume-dot"></span>
+        <span id="resumeScrollLabel">Back to latest</span>
+        <span class="resume-arrow">&#8595;</span>
+      </button>
     </div>
     <div class="composer">
       <div class="composer-inner">
         <div id="errorSlot"></div>
         <div class="input-row">
+          <div class="model-group" id="modelGroup"></div>
           <textarea id="input" rows="1"></textarea>
           <button class="send-btn" id="sendBtn" onclick="send()">↑</button>
         </div>
@@ -220,21 +302,107 @@
     </div>
   </main>
 
+  <div class="ctx-menu" id="chatMenu"></div>
+
 <script>
-  const MODEL = "claude-opus-4-8";
+  //  בורר המודל. הבחירה חיה לשיחה הנוכחית בלבד ואינה נשמרת —
+  //  שיחה חדשה נפתחת תמיד בברירת המחדל.
+  const MODELS = [
+    { id: "claude-fable-5",  label: "Fable 5"  },
+    { id: "claude-opus-5",   label: "Opus 5"   },
+    { id: "claude-sonnet-5", label: "Sonnet 5" },
+  ];
+  const DEFAULT_MODEL_ID = "claude-opus-5";
+  let MODEL = DEFAULT_MODEL_ID;
+
   const VARIANT = "live";
+
+  // ----- גרסאות -----
+  //  גרסת האתר מוגדרת כאן, בקובץ שהיא מתארת. העלה אותה כשאתה
+  //  משנה את הדף. שתי האחרות נמשכות מהשרת בזמן ריצה, ולכן
+  //  אינן יכולות להציג מספר ישן בטעות.
+  const SITE_VERSION = "5.0";
+
+  let versions = { site: SITE_VERSION, engine: null, knowledge: null };
+
+  function renderVersions() {
+    const el = document.getElementById("versions");
+    if (!el) return;
+    const t = T();
+    const rows = [
+      [t.verSite,      versions.site],
+      [t.verEngine,    versions.engine],
+      [t.verKnowledge, versions.knowledge],
+    ];
+    el.innerHTML = rows.map(([label, value]) =>
+      `<div class="ver-row"><span class="ver-label">${escapeHtml(label)}</span>` +
+      `<span class="ver-value${value ? "" : " pending"}">${escapeHtml(value || "\u2014")}</span></div>`
+    ).join("");
+  }
+
+  //  נמשך פעם אחת בטעינה. כשל אינו מפיל דבר — פשוט נשארים מקפים.
+  async function loadVersions() {
+    try {
+      const r = await fetch("/api/version");
+      if (!r.ok) return;
+      const v = await r.json();
+      versions.engine = v.engine || null;
+      versions.knowledge = v.knowledge || null;
+    } catch (e) {
+      console.warn("version fetch failed:", e);
+    }
+    renderVersions();
+  }
+
+  function modelLabel(id) {
+    const m = MODELS.find(x => x.id === id);
+    return m ? m.label : id;
+  }
+
+  function renderModelGroup() {
+    const g = document.getElementById("modelGroup");
+    if (!g) return;
+    g.innerHTML = MODELS.map(m =>
+      `<button class="model-btn${m.id === MODEL ? " active" : ""}" data-model="${m.id}"` +
+      ` onclick="setModel('${m.id}')">${m.label}</button>`
+    ).join("");
+  }
+
+  function setModel(id) {
+    if (!MODELS.some(m => m.id === id)) return;
+    MODEL = id;
+    renderModelGroup();
+  }
+
+  //  המודל האחרון שענה בשיחה, אם נשמר.
+  function lastUsedModel(chat) {
+    if (!chat || !chat.messages) return null;
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      const m = chat.messages[i];
+      if (m.role === "assistant" && m.model && MODELS.some(x => x.id === m.model)) {
+        return m.model;
+      }
+    }
+    return null;
+  }
 
   // ----- שפות -----
   // להוספת שפה: הוסף רשומה אחת כאן. 'dir' מסובב את כל הפריסה אוטומטית.
   const I18N = {
     en: {
-      label: "English", dir: "ltr", docTitle: "Nature Code",
+      label: "English", dir: "ltr", locale: "en-GB", docTitle: "Nature Code",
       brand: "Nature Code", newChat: "+ New chat", untitled: "New conversation",
       emptyTitle: "Nature Code",
       emptyText: "Describe your challenge.",
       placeholder: "Describe your challenge...",
       error: "Couldn't reach the engine. Check your connection and try again.",
       thinkingLabel: "How I worked this out",
+      rename: "Rename",
+      verSite: "Site version",
+      verEngine: "Engine version",
+      verKnowledge: "Knowledge version",
+      deleteChat: "Delete",
+      resumeScroll: "Still writing — jump to latest",
       searching: "Checking sources...",
       stageStart: "Getting to work",
       stageThinking: "Working out the approach",
@@ -256,13 +424,19 @@
       timeJustNow: "now", timeMinShort: "m", timeHourShort: "h", timeDayShort: "d",
     },
     he: {
-      label: "עברית", dir: "rtl", docTitle: "מנוע בינת הטבע",
+      label: "עברית", dir: "rtl", locale: "he-IL", docTitle: "מנוע בינת הטבע",
       brand: "מנוע בינת הטבע", newChat: "+ שיחה חדשה", untitled: "שיחה חדשה",
       emptyTitle: "מנוע בינת הטבע",
       emptyText: "תארו את האתגר שלכם.",
       placeholder: "תארו את האתגר שלכם...",
       error: "החיבור למנוע נכשל. בדקו את החיבור ונסו שוב.",
       thinkingLabel: "איך הגעתי לזה",
+      rename: "שינוי שם",
+      verSite: "גרסת האתר",
+      verEngine: "גרסת המנוע",
+      verKnowledge: "גרסת הידע",
+      deleteChat: "מחיקה",
+      resumeScroll: "המנוע עדיין כותב — חזרה לתשובה",
       searching: "בודק מקורות...",
       stageStart: "מתחיל לעבוד",
       stageThinking: "מגבש גישה",
@@ -306,6 +480,9 @@
     document.getElementById("newChatBtn").textContent = t.newChat;
     document.getElementById("input").placeholder = t.placeholder;
     document.getElementById("chatSearch").placeholder = t.chatSearchPlaceholder;
+    const rs = document.getElementById("resumeScrollLabel");
+    if (rs) rs.textContent = t.resumeScroll;
+    renderVersions();
     renderThread(); renderChatsList();
   }
   function setLang(code) {
@@ -361,17 +538,113 @@
     return groups;
   }
 
-  function relTime(iso) {
+  //  תאריך ושעה מלאים במקום זמן שחלף. "65 ימים" אינו אומר דבר
+  //  כשמחפשים שיחה מסוימת; תאריך כן. הפורמט נגזר משפת הממשק,
+  //  והשעה בפורמט 24 שעות בשתי השפות.
+  function absTime(iso) {
     if (!iso) return "";
-    const diff = Date.now() - new Date(iso).getTime();
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
     const t = T();
-    const min = Math.floor(diff / 60000);
-    if (min < 1) return t.timeJustNow;
-    if (min < 60) return min + t.timeMinShort;
-    const hr = Math.floor(min / 60);
-    if (hr < 24) return hr + t.timeHourShort;
-    const day = Math.floor(hr / 24);
-    return day + t.timeDayShort;
+    try {
+      return d.toLocaleString(t.locale || "en-GB", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit", hour12: false,
+      });
+    } catch (e) {
+      //  אם הסביבה אינה תומכת באפשרויות — נפילה לפורמט ידני,
+      //  כדי שהשורה לא תישאר ריקה.
+      const p = n => String(n).padStart(2, "0");
+      return p(d.getDate()) + "." + p(d.getMonth() + 1) + "." + d.getFullYear() +
+             " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    }
+  }
+
+  // ----- שינוי שם שיחה -----
+  //  תפריט הקשר על כותרת בסרגל. נפתח בקליק ימני, נסגר בכל
+  //  אינטראקציה אחרת. ממוקם לפי הסמן ונצמד פנימה אם חורג מהמסך.
+  function openChatMenu(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    const menu = document.getElementById("chatMenu");
+    menu.innerHTML =
+      `<button class="ctx-item" onclick="startRename('${id}')">${escapeHtml(T().rename)}</button>` +
+      `<button class="ctx-item danger" onclick="closeChatMenu();delChat('${id}')">${escapeHtml(T().deleteChat)}</button>`;
+    menu.classList.add("show");
+    const w = menu.offsetWidth, h = menu.offsetHeight;
+    menu.style.left = Math.min(e.clientX, window.innerWidth  - w - 8) + "px";
+    menu.style.top  = Math.min(e.clientY, window.innerHeight - h - 8) + "px";
+    return false;
+  }
+
+  function closeChatMenu() {
+    const m = document.getElementById("chatMenu");
+    if (m) m.classList.remove("show");
+  }
+
+  //  הופך את הכותרת לשדה עריכה, עם הטקסט מסומן כך שאפשר
+  //  להקליד מיד. אישור ב-Enter או ביציאה מהשדה; ביטול ב-Escape.
+  function startRename(id) {
+    closeChatMenu();
+    const el = document.getElementById("title_" + id);
+    if (!el) return;
+
+    const chat = chats.find(c => c.id === id);
+    const original = (chat && chat.title) || "";
+
+    el.textContent = "";
+    const inp = document.createElement("input");
+    inp.className = "chat-rename-input";
+    inp.value = original;
+    el.appendChild(inp);
+    inp.focus();
+    inp.select();
+
+    //  הקליקים בתוך השדה לא אמורים לפתוח את השיחה.
+    ["click", "mousedown", "dblclick"].forEach(ev =>
+      inp.addEventListener(ev, e => e.stopPropagation()));
+
+    let settled = false;
+    async function finish(commit) {
+      if (settled) return;
+      settled = true;
+      const value = inp.value.trim();
+      //  שם ריק או ללא שינוי — לא נשמר, והתצוגה חוזרת כמות שהיא.
+      if (commit && value && value !== original) {
+        await renameChat(id, value);
+      } else {
+        renderChatsList();
+      }
+    }
+
+    inp.addEventListener("keydown", e => {
+      e.stopPropagation();
+      if (e.key === "Enter") { e.preventDefault(); finish(true); }
+      else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+    });
+    inp.addEventListener("blur", () => finish(true));
+  }
+
+  //  שומר במסד. השורה מהסרגל מכילה את השיחה המלאה, ולכן אפשר
+  //  לשלוח אותה כמו שהיא עם הכותרת החדשה — בלי לטעון אותה שוב.
+  async function renameChat(id, title) {
+    const chat = chats.find(c => c.id === id);
+    if (!chat) return;
+    //  touch=false — שינוי שם אינו פעילות בשיחה, ולכן זמן העדכון
+    //  אינו משתנה והשיחה נשארת במקומה היחסי ברשימה.
+    const payload = Object.assign({}, chat, { title, touch: false });
+    try {
+      const r = await fetch("/api/chats/" + encodeURIComponent(id), {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      chat.title = title;
+      if (currentChat && currentChat.id === id) currentChat.title = title;
+    } catch (e) {
+      console.error("renameChat failed:", e);
+    }
+    await loadChats();
   }
 
   function renderChatsList() {
@@ -408,10 +681,10 @@
       if (!items.length) return;
       html += `<div class="chat-group-label">${label}</div>`;
       html += items.map(c => `
-        <div class="chat-item ${currentChat && c.id === currentChat.id ? "active" : ""}" onclick="openChat('${c.id}')">
+        <div class="chat-item ${currentChat && c.id === currentChat.id ? "active" : ""}" onclick="openChat('${c.id}')" oncontextmenu="return openChatMenu(event,'${c.id}')">
           <div class="chat-item-main">
-            <div class="chat-item-title">${escapeHtml(c.title || T().untitled)}</div>
-            <div class="chat-item-meta">${relTime(c.updated_at)}</div>
+            <div class="chat-item-title" id="title_${c.id}">${escapeHtml(c.title || T().untitled)}</div>
+            <div class="chat-item-meta">${absTime(c.created_at || c.updated_at)}</div>
           </div>
           <span class="chat-del" onclick="event.stopPropagation();delChat('${c.id}')">×</span>
         </div>`).join("");
@@ -419,7 +692,11 @@
     el.innerHTML = html;
   }
 
-  function newChat() {
+  //  resetModel=false נשלח כששיחה נפתחת מתוך send() — שם המשתמש
+  //  כבר בחר מודל, ואיפוס היה דורס את הבחירה שלו רגע לפני השליחה.
+  //  כפתור "שיחה חדשה" קורא בלי פרמטר, ולכן כן מאפס.
+  function newChat(resetModel) {
+    if (resetModel !== false) setModel(DEFAULT_MODEL_ID);
     currentChat = { id: "chat_" + Date.now(), title: null, messages: [], variant: VARIANT };
     renderThread(); renderChatsList();
     document.getElementById("input").focus();
@@ -429,6 +706,9 @@
       const r = await fetch("/api/chats/" + encodeURIComponent(id));
       if (!r.ok) throw new Error("HTTP " + r.status);
       currentChat = await r.json();
+      //  שיחה קיימת חוזרת עם המודל שענה בה לאחרונה, לא עם ברירת
+      //  המחדל. התיוג נשמר בתוך ההודעות, ולכן הוא שורד רענון.
+      setModel(lastUsedModel(currentChat) || DEFAULT_MODEL_ID);
       renderThread(); renderChatsList();
     } catch (e) {
       console.error("openChat failed:", e);
@@ -487,7 +767,7 @@
     if (!got) return false;
 
     currentChat.messages.push({
-      role: "assistant", content: live.text,
+      role: "assistant", content: live.text, model: MODEL,
       thinking: live.thinking, searches: live.searches.slice(),
     });
     return true;
@@ -509,6 +789,7 @@
     const blocks = data.content || [];
     currentChat.messages.push({
       role: "assistant",
+      model: MODEL,
       content: blocks.filter(b => b.type === "text").map(b => b.text).join("\n"),
       thinking: blocks.filter(b => b.type === "thinking").map(b => b.thinking || "").join("\n\n").trim(),
       searches: blocks.filter(b => b.type === "server_tool_use" && b.name === "web_search")
@@ -580,6 +861,11 @@
     let html = currentChat.messages.map((m, i) => {
       let extra = "";
       if (m.role === "assistant") {
+        //  מי ענה. חשוב כשמחליפים מודל באמצע שיחה — אחרת אי אפשר
+        //  לדעת איזו תשובה הגיעה מאיזה מודל.
+        if (m.model) {
+          extra += `<div class="model-tag">${escapeHtml(modelLabel(m.model))}</div>`;
+        }
         if (m.searches && m.searches.length) {
           extra += `<div class="search-chips">` +
             m.searches.map(q => `<span class="chip">\u2315 ${escapeHtml(q)}</span>`).join("") +
@@ -602,7 +888,51 @@
         : `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
     }
     inner.innerHTML = html;
-    document.getElementById("thread").scrollTop = 99999;
+    if (autoScroll) {
+      scrollToBottom();
+    } else {
+      //  אם התוכן התכווץ מתחת למיקום הנוכחי, נוצר רווח ריק.
+      //  מצמידים בחזרה לסוף התוכן בלי לחדש מעקב.
+      const t = document.getElementById("thread");
+      if (t && t.scrollTop > t.scrollHeight - t.clientHeight) {
+        t.scrollTop = Math.max(0, t.scrollHeight - t.clientHeight);
+      }
+    }
+    updateResumeButton();
+  }
+
+  // ----- גלילה אוטומטית -----
+  //  בזמן שהתשובה נכתבת החלון נגלל אוטומטית. ברגע שהמשתמש
+  //  גולל בעצמו כלפי מעלה, הגלילה האוטומטית נעצרת — אחרת הטקסט
+  //  זז מתחת לעיניים שלו באמצע קריאה. היא חוזרת כשהוא חוזר
+  //  לתחתית, בגלילה או בלחיצה על הכפתור הצף.
+  let autoScroll = true;
+
+  //  סף סובלנות. גלילה חלקה ועיגול פיקסלים לא מגיעים בדיוק לאפס,
+  //  ולכן "בתחתית" הוא טווח ולא נקודה.
+  const BOTTOM_SLACK = 60;
+
+  function atBottom(el) {
+    return el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_SLACK;
+  }
+
+  function scrollToBottom() {
+    const t = document.getElementById("thread");
+    if (t) t.scrollTop = t.scrollHeight;
+  }
+
+  function updateResumeButton() {
+    const btn = document.getElementById("resumeScroll");
+    if (!btn) return;
+    //  הכפתור רלוונטי רק בזמן כתיבה. אחרי שהתשובה הושלמה
+    //  אין לאן "לחזור", והוא רק היה מסתיר טקסט.
+    btn.classList.toggle("show", !autoScroll && !!live);
+  }
+
+  function resumeAutoScroll() {
+    autoScroll = true;
+    scrollToBottom();
+    updateResumeButton();
   }
   function escapeHtml(s) {
     return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -623,12 +953,15 @@
     const input = document.getElementById("input");
     const text = input.value.trim();
     if (!text) return;
-    if (!currentChat) newChat();
+    if (!currentChat) newChat(false);
 
     document.getElementById("errorSlot").innerHTML = "";
     currentChat.messages.push({ role:"user", content:text });
     if (!currentChat.title) currentChat.title = text.slice(0, 40);
     input.value = ""; input.style.height = "auto";
+    //  שליחה חדשה תמיד מחזירה מעקב — המשתמש רוצה לראות את
+    //  התשובה שהוא בדיוק ביקש, גם אם גלל למעלה קודם.
+    autoScroll = true;
     renderThread(true);
     setSending(true);
 
@@ -675,6 +1008,9 @@
   }
   function setSending(on) {
     document.getElementById("sendBtn").disabled = on;
+    //  נועל את הבורר בזמן שהבקשה בדרך, כדי שלא ייווצר מצב שבו
+    //  התשובה מתויגת במודל אחר מזה שבאמת ענה.
+    document.querySelectorAll(".model-btn").forEach(b => { b.disabled = on; });
   }
 
   // ----- קלט -----
@@ -687,7 +1023,48 @@
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   });
 
+  //  מאזין הגלילה. wheel ו-touchstart תופסים את כוונת המשתמש מיד,
+  //  לפני שמיקום הגלילה השתנה — כך שגלילה כלפי מעלה עוצרת את
+  //  המעקב גם באמצע זרם מהיר של טקסט.
+  (function initScrollWatch() {
+    const t = document.getElementById("thread");
+    if (!t) return;
+    //  אירוע הגלילה רק מחזיר מעקב, לעולם לא מבטל אותו. התוכן
+    //  מתכווץ באמצע הזרם — תצוגת החשיבה נעלמת ברגע שהטקסט מתחיל —
+    //  והדפדפן משאיר את מיקום הגלילה במקומו. ביטול לפי מיקום היה
+    //  מכבה את המעקב מעצמו ומשאיר את הרווח הריק שנראה בצילום.
+    t.addEventListener("scroll", () => {
+      if (!autoScroll && atBottom(t)) { autoScroll = true; updateResumeButton(); }
+    }, { passive: true });
+    t.addEventListener("wheel", e => {
+      if (e.deltaY < 0 && autoScroll) { autoScroll = false; updateResumeButton(); }
+    }, { passive: true });
+    t.addEventListener("touchmove", () => {
+      if (autoScroll && !atBottom(t)) { autoScroll = false; updateResumeButton(); }
+    }, { passive: true });
+    //  מקשי גלילה — חץ מעלה, פייג' אפ, בית.
+    t.addEventListener("keydown", e => {
+      if (["ArrowUp", "PageUp", "Home"].includes(e.key) && autoScroll) {
+        autoScroll = false; updateResumeButton();
+      }
+    });
+    t.setAttribute("tabindex", "-1");
+  })();
+
+  //  סגירת תפריט ההקשר בכל אינטראקציה אחרת.
+  document.addEventListener("click", closeChatMenu);
+  document.addEventListener("scroll", closeChatMenu, true);
+  window.addEventListener("resize", closeChatMenu);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeChatMenu(); });
+  document.addEventListener("contextmenu", e => {
+    //  קליק ימני מחוץ לרשימת השיחות סוגר את התפריט ומחזיר
+    //  את תפריט הדפדפן הרגיל.
+    if (!e.target.closest(".chat-item")) closeChatMenu();
+  });
+
   initLang();
+  loadVersions();
+  renderModelGroup();
   renderThread();
   loadChats();
 </script>

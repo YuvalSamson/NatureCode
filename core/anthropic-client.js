@@ -11,7 +11,25 @@
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-const DEFAULT_MODEL = "claude-opus-4-8";
+const DEFAULT_MODEL = "claude-opus-5";
+
+//  המודלים שהדף רשאי לבקש. הדף שולח מזהה מודל בכל בקשה, ולכן
+//  נדרשת רשימה סגורה — אחרת מחרוזת שגויה או זדונית מהדפדפן
+//  הופכת לבקשה אמיתית אל אנתרופיק על חשבון המפתח שלנו.
+const ALLOWED_MODELS = [
+  "claude-fable-5",
+  "claude-opus-5",
+  "claude-sonnet-5",
+];
+
+//  בוחר את המודל בפועל: מה שהדף ביקש אם הוא ברשימה, אחרת
+//  ברירת המחדל. חריגה נרשמת ליומן ואינה מפילה את הבקשה.
+function resolveModel(requested) {
+  if (!requested) return DEFAULT_MODEL;
+  if (ALLOWED_MODELS.includes(requested)) return requested;
+  console.warn("Anthropic: rejected unknown model '" + requested + "' - falling back to " + DEFAULT_MODEL);
+  return DEFAULT_MODEL;
+}
 
 //  חשיבה מורחבת דורשת max_tokens גדול מ-thinking budget.
 const DEFAULT_MAX_TOKENS = 16000;
@@ -64,6 +82,7 @@ async function askClaude({
     system.push({ type: "text", text: systemVolatile });
   }
 
+  const activeModel = resolveModel(model);
   const budget = thinkingBudget === undefined ? DEFAULT_THINKING_BUDGET : thinkingBudget;
   const tokens = maxTokens || DEFAULT_MAX_TOKENS;
   const useSearch = webSearch !== false;
@@ -72,7 +91,7 @@ async function askClaude({
   //  thinkingMode: "adaptive" (מודלים חדשים) | "budget" (ישנים) | null (ללא)
   function buildBody({ thinkingMode, withEffort, withTools }) {
     const body = {
-      model: model || DEFAULT_MODEL,
+      model: activeModel,
       max_tokens: tokens,
       system,
       messages,
@@ -190,13 +209,14 @@ async function streamClaude({
   const system = [{ type: "text", text: systemStable, cache_control: { type: "ephemeral" } }];
   if (systemVolatile) system.push({ type: "text", text: systemVolatile });
 
+  const activeModel = resolveModel(model);
   const budget = thinkingBudget === undefined ? DEFAULT_THINKING_BUDGET : thinkingBudget;
   const tokens = maxTokens || DEFAULT_MAX_TOKENS;
   const useSearch = webSearch !== false;
 
   function buildBody({ thinkingMode, withEffort, withTools }) {
     const body = {
-      model: model || DEFAULT_MODEL,
+      model: activeModel,
       max_tokens: tokens,
       system,
       messages,
@@ -269,6 +289,7 @@ module.exports = {
   askClaude,
   streamClaude,
   DEFAULT_MODEL,
+  ALLOWED_MODELS,
   DEFAULT_MAX_TOKENS,
   DEFAULT_THINKING_BUDGET,
 };

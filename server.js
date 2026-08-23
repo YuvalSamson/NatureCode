@@ -1,7 +1,8 @@
 // ============================================================
 //  server.js
 //  נקודת הכניסה — מחברת את הגרעין לדף ולמסד.
-//  גרסה אחת חיה. הידע מורכב משלושת קבצי knowledge/ ונשמר במטמון.
+//  גרסה אחת חיה. הידע מורכב מכל קובצי knowledge/ לפי סדר שמותיהם,
+//  ונשמר במטמון. הוספת קובץ ידע אינה דורשת שינוי כאן.
 // ============================================================
 
 const express = require("express");
@@ -11,7 +12,12 @@ try { require("dotenv").config(); } catch (e) { /* dotenv optional */ }
 
 const { askClaude, streamClaude, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_THINKING_BUDGET } = require("./core/anthropic-client");
 const { initDb, getChats, getChat, upsertChat, deleteChat } = require("./core/db");
-const { loadKnowledge, getKnowledge, reloadKnowledge } = require("./core/knowledge-loader");
+const { loadKnowledge, getKnowledge, reloadKnowledge, getKnowledgeMeta } = require("./core/knowledge-loader");
+
+//  גרסת המנוע. העלה אותה כשמשנים לוגיקה בשרת או בגרעין.
+//  גרסת הידע אינה מוגדרת כאן — היא מחושבת מתוכן קובצי הידע
+//  עצמם, ולכן אי אפשר לשכוח לעדכן אותה.
+const ENGINE_VERSION = "11.1";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -257,11 +263,37 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
+// ---------- גרסאות ----------
+//  הדף מציג שלוש גרסאות. את שלו הוא מכיר בעצמו; שתי אלה
+//  נמשכות מכאן בזמן ריצה, ולכן אינן יכולות להציג מספר ישן.
+//  לא נחשף שום תוכן ידע — רק ספירה וטביעת אצבע.
+app.get("/api/version", (req, res) => {
+  try {
+    const meta = getKnowledgeMeta();
+    res.json({
+      engine: ENGINE_VERSION,
+      knowledge: meta.version,
+      knowledgeDetail: {
+        files: meta.files,
+        bytes: meta.bytes,
+        approxTokens: meta.approxTokens,
+        hash: meta.hash,
+        loadedAt: meta.loadedAt,
+      },
+    });
+  } catch (e) {
+    console.error("VERSION FAILED:", String(e));
+    res.json({ engine: ENGINE_VERSION, knowledge: null });
+  }
+});
+
 // ---------- טעינת ידע מחדש (אחרי שיפור המודל) ----------
 app.post("/api/reload-knowledge", (req, res) => {
   try {
     reloadKnowledge();
-    res.json({ ok: true, message: "knowledge reloaded" });
+    //  מחזיר את טביעת האצבע החדשה — כך רואים מיד אם הרענון תפס.
+    const meta = getKnowledgeMeta();
+    res.json({ ok: true, message: "knowledge reloaded", knowledge: meta.version });
   } catch (e) {
     res.status(500).json({ error: "reload failed", detail: String(e) });
   }
@@ -277,7 +309,7 @@ async function start() {
     console.warn("WARNING: DB init failed —", String(e));
   }
   app.listen(PORT, () => {
-    console.log("Nature Engine running on http://localhost:" + PORT);
+    console.log("Nature Engine v" + ENGINE_VERSION + " running on http://localhost:" + PORT);
     if (!ANTHROPIC_API_KEY) {
       console.warn("WARNING: ANTHROPIC_API_KEY is not set — /api/ask will fail until you set it.");
     }
