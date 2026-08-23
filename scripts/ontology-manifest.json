@@ -1,0 +1,1320 @@
+{
+  "_comment": "One entry per knowledge card. Adding an ontology = drop the workbook in ontology/xlsx, add an entry here, run the distiller, add a registry row to 05-ontology-index.md. No code changes.",
+  "ontologies": [
+    {
+      "key": "repair",
+      "code": "10",
+      "file": "10-repair.md",
+      "title": "Repair and self-healing — function ontology",
+      "workbook": "Nature_Repair_Ontology_v2.xlsx",
+      "scope": "Covers how living systems prevent, detect, stabilise, seal and rebuild damage, and how those sequences transfer to engineered materials and systems. Sixteen strategies (NR01–NR16) with the S1–S10 sub-strategy vocabulary bridging to the main ontology. Does not cover adhesion for its own sake (card 14), thermal damage prevention (card 12), or pattern formation (cards 11a–11d). Complete: 60 mapped papers.",
+      "sourceSheets": [
+        "Papers (60)",
+        "Attached Sources"
+      ],
+      "sections": [
+        {
+          "title": "Strategies",
+          "sheet": "Repair Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 12
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 44
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological model"
+              ],
+              "cap": 70
+            },
+            {
+              "label": "Engineering-neutral rule",
+              "match": [
+                "Engineering-neutral design rule"
+              ],
+              "cap": 150
+            },
+            {
+              "label": "Use when",
+              "match": [
+                "Suitable engineering conditions"
+              ],
+              "cap": 90
+            },
+            {
+              "label": "Trade-off",
+              "match": [
+                "Main trade-off"
+              ],
+              "cap": 80
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers",
+          "sheet": "Challenge→Strategy",
+          "note": "Classify the damage first, then select. These are the lines that decide when this ontology is the right one to reach for.",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern"
+              ],
+              "cap": 70
+            },
+            {
+              "label": "Qualifiers",
+              "match": [
+                "Critical qualifiers"
+              ],
+              "cap": 70
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritize",
+                "Prioritise"
+              ],
+              "cap": 34
+            },
+            {
+              "label": "Combine with",
+              "match": [
+                "Usually combine with"
+              ],
+              "cap": 34
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 130
+            }
+          ]
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Ontology Bridge",
+          "note": "Sub-strategy codes S1–S10 are kept as they are. They are more precise than the main ontology vocabulary, and precision is the point.",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Sub-strategy",
+              "match": [
+                "sub-strategy"
+              ],
+              "cap": 44
+            },
+            {
+              "label": "Ontology function",
+              "match": [
+                "Ontology function"
+              ],
+              "cap": 44
+            },
+            {
+              "label": "Ontology strategy",
+              "match": [
+                "Ontology strategy"
+              ],
+              "cap": 70
+            },
+            {
+              "label": "Operating principle",
+              "match": [
+                "Operating principle"
+              ],
+              "cap": 30
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Maturity Guide",
+          "type": "kv",
+          "skipRows": 3,
+          "cap": 200
+        }
+      ],
+      "budget": 15000
+    },
+    {
+      "key": "patterns-core",
+      "code": "11a",
+      "file": "11a-patterns-core.md",
+      "title": "Patterns in nature — core ontology",
+      "workbook": "Patterns_in_Nature_Ontology_v3.xlsx",
+      "scope": "The base pattern ontology: which patterns recur in nature, which local mechanisms generate them, which rules govern them, and which functions they serve. This is the card to reach for when the question is about form, arrangement, distribution or self-organisation rather than about a specific function. Three research corpora sit in sibling cards: 11b Aizenberg and Mazzoleni, 11c Pawlyn, 11d Menges. A pattern is not a function — the Pattern→Function sheet in the workbook records which inferences are legitimate and which are not.",
+      "sourceSheets": [
+        "Evidence Sources",
+        "Source→Ontology"
+      ],
+      "sections": [
+        {
+          "title": "Pattern families",
+          "sheet": "Pattern Families",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Pattern ID"
+              ],
+              "cap": 10
+            },
+            {
+              "label": "Family",
+              "match": [
+                "Pattern family"
+              ],
+              "cap": 34
+            },
+            {
+              "label": "Observable signature",
+              "match": [
+                "Observable signature"
+              ],
+              "cap": 48
+            },
+            {
+              "label": "Primary functions",
+              "match": [
+                "Primary functions"
+              ],
+              "cap": 40
+            }
+          ]
+        },
+        {
+          "title": "Generative mechanisms",
+          "sheet": "Generative Mechanisms",
+          "note": "The local rule is the transferable part. A pattern copied without its generating mechanism is decoration.",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Mechanism ID"
+              ],
+              "cap": 10
+            },
+            {
+              "label": "Mechanism",
+              "match": [
+                "Generative mechanism"
+              ],
+              "cap": 36
+            },
+            {
+              "label": "Local rule",
+              "match": [
+                "Local rule"
+              ],
+              "cap": 58
+            }
+          ]
+        },
+        {
+          "title": "Governing rules",
+          "sheet": "Governing Rules",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Rule ID"
+              ],
+              "cap": 10
+            },
+            {
+              "label": "Rule",
+              "match": [
+                "Rule / relation"
+              ],
+              "cap": 40
+            },
+            {
+              "label": "Design implication",
+              "match": [
+                "Design implication"
+              ],
+              "cap": 58
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers",
+          "sheet": "Challenge→Pattern",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern"
+              ],
+              "cap": 46
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritize pattern",
+                "Prioritise pattern"
+              ],
+              "cap": 28
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 64
+            }
+          ]
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Ontology Bridge",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Bridge ID"
+              ],
+              "cap": 10
+            },
+            {
+              "label": "Pattern concept",
+              "match": [
+                "Pattern ontology concept"
+              ],
+              "cap": 30
+            },
+            {
+              "label": "Parent concept",
+              "match": [
+                "Parent Nature concept"
+              ],
+              "cap": 30
+            },
+            {
+              "label": "Parent strategy / principle",
+              "match": [
+                "Parent strategy"
+              ],
+              "cap": 34
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Maturity Guide",
+          "columns": [
+            {
+              "label": "Level",
+              "match": [
+                "Level"
+              ],
+              "cap": 12
+            },
+            {
+              "label": "Label",
+              "match": [
+                "Evidence / maturity label",
+                "Label"
+              ],
+              "cap": 30
+            },
+            {
+              "label": "Definition",
+              "match": [
+                "Definition"
+              ],
+              "cap": 100
+            },
+            {
+              "label": "How to use it",
+              "match": [
+                "How engine should use",
+                "How to use"
+              ],
+              "cap": 100
+            }
+          ]
+        }
+      ],
+      "budget": 36000
+    },
+    {
+      "key": "patterns-research",
+      "code": "11b",
+      "file": "11b-patterns-aizenberg-mazzoleni.md",
+      "title": "Patterns in nature — Aizenberg and Mazzoleni corpora",
+      "workbook": "Patterns_in_Nature_Ontology_v3.xlsx",
+      "scope": "Two research corpora feeding the pattern ontology. Aizenberg: laboratory work on structural colour, self-assembly, adaptive surfaces and bio-inspired materials, at the nanoscale to component scale. Mazzoleni: architectural and product case studies organised by function. Use these for worked precedents — what has actually been built from a pattern, by whom, and at what scale. The base ontology is card 11a.",
+      "sourceSheets": [
+        "Evidence Sources"
+      ],
+      "sections": [
+        {
+          "title": "Aizenberg — laboratory corpus",
+          "sheet": "Aizenberg Bioinspired",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Record ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Year",
+              "match": [
+                "Year"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Work",
+              "match": [
+                "Research / paper / project"
+              ],
+              "cap": 42
+            },
+            {
+              "label": "Natural model",
+              "match": [
+                "Natural model"
+              ],
+              "cap": 30
+            },
+            {
+              "label": "Mechanism",
+              "match": [
+                "Mechanism / extracted principle"
+              ],
+              "cap": 77
+            },
+            {
+              "label": "Design rule",
+              "match": [
+                "Engineering-neutral design"
+              ],
+              "cap": 77
+            }
+          ]
+        },
+        {
+          "title": "Mazzoleni — applied corpus",
+          "sheet": "Mazzoleni Bioinspired",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Record ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Case",
+              "match": [
+                "Source / case study"
+              ],
+              "cap": 39
+            },
+            {
+              "label": "Function",
+              "match": [
+                "Function category"
+              ],
+              "cap": 23
+            },
+            {
+              "label": "Natural model",
+              "match": [
+                "Natural model"
+              ],
+              "cap": 28
+            },
+            {
+              "label": "Pattern / structure",
+              "match": [
+                "Nature pattern / structure"
+              ],
+              "cap": 62
+            },
+            {
+              "label": "Mechanism",
+              "match": [
+                "Biological mechanism"
+              ],
+              "cap": 70
+            }
+          ]
+        }
+      ],
+      "budget": 15000
+    },
+    {
+      "key": "patterns-pawlyn",
+      "code": "11c",
+      "file": "11c-patterns-pawlyn.md",
+      "title": "Patterns in nature — Pawlyn corpus (built environment)",
+      "workbook": "Patterns_in_Nature_Ontology_v3.xlsx",
+      "scope": "Biomimicry applied to architecture and the built environment: structures, envelopes, water, energy, waste and thermal comfort at building and settlement scale. Strongest where the challenge is a building, an infrastructure system or a closed resource loop. Weakest for materials-scale or algorithmic questions — use 11a, 11b or card 13 instead. The base ontology is card 11a.",
+      "sourceSheets": [
+        "Pawlyn Sources",
+        "Pawlyn Case Studies"
+      ],
+      "sections": [
+        {
+          "title": "Strategies",
+          "sheet": "Pawlyn Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 9
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 37
+            },
+            {
+              "label": "Mimicry level",
+              "match": [
+                "Mimicry level"
+              ],
+              "cap": 21
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological"
+              ],
+              "cap": 49
+            },
+            {
+              "label": "Natural logic",
+              "match": [
+                "Natural logic"
+              ],
+              "cap": 98
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers",
+          "sheet": "Pawlyn Challenges",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern"
+              ],
+              "cap": 54
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritise",
+                "Prioritize"
+              ],
+              "cap": 29
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 106
+            },
+            {
+              "label": "What to measure",
+              "match": [
+                "What to measure"
+              ],
+              "cap": 57
+            }
+          ]
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Pawlyn Bridge",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "strategy"
+              ],
+              "cap": 36
+            },
+            {
+              "label": "Theme",
+              "match": [
+                "Master theme"
+              ],
+              "cap": 21
+            },
+            {
+              "label": "Ontology function",
+              "match": [
+                "Ontology function"
+              ],
+              "cap": 32
+            },
+            {
+              "label": "Operating principle",
+              "match": [
+                "Operating principle"
+              ],
+              "cap": 24
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Pawlyn Maturity",
+          "type": "kv",
+          "skipRows": 2,
+          "cap": 200
+        }
+      ],
+      "budget": 15000
+    },
+    {
+      "key": "patterns-menges",
+      "code": "11d",
+      "file": "11d-patterns-menges.md",
+      "title": "Patterns in nature — Menges corpus (material computation)",
+      "workbook": "Patterns_in_Nature_Ontology_v3.xlsx",
+      "scope": "Biomimicry where the material itself does the computing: fibre orientation, anisotropy, hygroscopic actuation, differentiated growth and computational fabrication. Strongest where the answer is a material system that responds without sensors or actuators. Complements 11c, which works at building scale with conventional systems. The base ontology is card 11a.",
+      "sourceSheets": [
+        "Menges Sources",
+        "Menges Case Studies"
+      ],
+      "sections": [
+        {
+          "title": "Strategies",
+          "sheet": "Menges Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 9
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 37
+            },
+            {
+              "label": "Mimicry level",
+              "match": [
+                "Mimicry level"
+              ],
+              "cap": 21
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological"
+              ],
+              "cap": 49
+            },
+            {
+              "label": "Natural logic",
+              "match": [
+                "Natural logic"
+              ],
+              "cap": 98
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers",
+          "sheet": "Menges Challenges",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern"
+              ],
+              "cap": 54
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritise",
+                "Prioritize"
+              ],
+              "cap": 29
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 106
+            },
+            {
+              "label": "What to measure",
+              "match": [
+                "What to measure"
+              ],
+              "cap": 57
+            }
+          ]
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Menges Bridge",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "strategy"
+              ],
+              "cap": 36
+            },
+            {
+              "label": "Theme",
+              "match": [
+                "Master theme"
+              ],
+              "cap": 21
+            },
+            {
+              "label": "Ontology function",
+              "match": [
+                "Ontology function"
+              ],
+              "cap": 32
+            },
+            {
+              "label": "Operating principle",
+              "match": [
+                "Operating principle"
+              ],
+              "cap": 24
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Menges Maturity",
+          "type": "kv",
+          "skipRows": 2,
+          "cap": 200
+        }
+      ],
+      "budget": 16000
+    },
+    {
+      "key": "thermal",
+      "code": "12",
+      "file": "12-thermal.md",
+      "title": "Heat and temperature regulation — function ontology",
+      "workbook": "Nature_Heat_Temperature_Regulation_Ontology_Integrated_v1.xlsx",
+      "scope": "The whole thermal domain in one card, in two layers. The control layer (NT strategies) covers insulation, countercurrent exchange, storage, set-point management and adaptive regulation — how a system holds a temperature. The heat-removal layer (NC strategies) covers evaporative, radiative, conductive and convective cooling — how a system sheds heat, and it is a child of the control layer, not a sibling. When the question is 'stay within a band', start at NT. When it is 'get rid of heat', start at NC and check which NT strategy it serves. The standalone cooling workbook was retired; this file supersedes it.",
+      "sourceSheets": [
+        "Thermal Papers (30)",
+        "Cooling Papers (34)",
+        "Cooling Sources"
+      ],
+      "sections": [
+        {
+          "title": "Control-layer strategies (NT)",
+          "sheet": "Thermal Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 9
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 35
+            },
+            {
+              "label": "Phase",
+              "match": [
+                "Thermal phase"
+              ],
+              "cap": 23
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological"
+              ],
+              "cap": 46
+            },
+            {
+              "label": "Natural sequence",
+              "match": [
+                "Natural sequence"
+              ],
+              "cap": 93
+            }
+          ]
+        },
+        {
+          "title": "Heat-removal strategies (NC)",
+          "sheet": "Cooling Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 9
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 35
+            },
+            {
+              "label": "Phase",
+              "match": [
+                "Cooling phase"
+              ],
+              "cap": 23
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological"
+              ],
+              "cap": 46
+            },
+            {
+              "label": "Natural sequence",
+              "match": [
+                "Natural sequence"
+              ],
+              "cap": 93
+            }
+          ]
+        },
+        {
+          "title": "NT ↔ NC crosswalk",
+          "sheet": "NT↔NC Crosswalk",
+          "note": "This is the boundary resolution. Cooling terms are kept because they are more precise, but each one reports to a control-layer parent.",
+          "columns": [
+            {
+              "label": "Cooling ID",
+              "match": [
+                "Cooling ID"
+              ],
+              "cap": 9
+            },
+            {
+              "label": "Cooling strategy",
+              "match": [
+                "Cooling strategy"
+              ],
+              "cap": 34
+            },
+            {
+              "label": "Parent NT",
+              "match": [
+                "Parent NT"
+              ],
+              "cap": 34
+            },
+            {
+              "label": "Role in regulation",
+              "match": [
+                "Role in broader"
+              ],
+              "cap": 78
+            },
+            {
+              "label": "Use when",
+              "match": [
+                "Use when"
+              ],
+              "cap": 70
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers — control layer",
+          "sheet": "Thermal Challenges",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern"
+              ],
+              "cap": 51
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritize",
+                "Prioritise"
+              ],
+              "cap": 28
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 93
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers — heat removal",
+          "sheet": "Cooling Challenges",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern"
+              ],
+              "cap": 51
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritize",
+                "Prioritise"
+              ],
+              "cap": 28
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 93
+            }
+          ]
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Thermal Ontology Bridge",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Thermal strategy",
+              "match": [
+                "Thermal strategy"
+              ],
+              "cap": 34
+            },
+            {
+              "label": "Ontology function",
+              "match": [
+                "Parent Nature function"
+              ],
+              "cap": 31
+            },
+            {
+              "label": "Operating principle",
+              "match": [
+                "Operating principle"
+              ],
+              "cap": 23
+            },
+            {
+              "label": "Cooling children",
+              "match": [
+                "Cooling children"
+              ],
+              "cap": 28
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Maturity Guide",
+          "columns": [
+            {
+              "label": "Level",
+              "match": [
+                "Level"
+              ],
+              "cap": 10
+            },
+            {
+              "label": "Label",
+              "match": [
+                "Label"
+              ],
+              "cap": 26
+            },
+            {
+              "label": "Definition",
+              "match": [
+                "Definition"
+              ],
+              "cap": 93
+            },
+            {
+              "label": "Does NOT prove",
+              "match": [
+                "does NOT prove",
+                "not prove"
+              ],
+              "cap": 93
+            }
+          ]
+        }
+      ],
+      "budget": 22000
+    },
+    {
+      "key": "algorithms",
+      "code": "13",
+      "file": "13-algorithms.md",
+      "title": "Nature-inspired algorithms — function ontology",
+      "workbook": "Nature_Algorithms_Ontology_v1.xlsx",
+      "scope": "How biological populations search, decide, route, allocate and adapt, and which of those transfer to computational method. Use for search, optimisation, routing, scheduling, allocation, anomaly detection and distributed coordination. WARNING — metaphor inflation is the standing failure mode of this field: a large share of published nature-inspired algorithms are renamed variants of existing methods with a new animal attached, and novelty of metaphor is not novelty of mechanism. Before proposing one, state what the algorithm does that a standard method does not, and prefer the established named method over its rebranded variant. Where the workbook flags this, carry the flag through.",
+      "sourceSheets": [
+        "Papers (48)",
+        "Attached Sources"
+      ],
+      "sections": [
+        {
+          "title": "Strategies",
+          "sheet": "Algorithm Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 12
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 46
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological"
+              ],
+              "cap": 60
+            },
+            {
+              "label": "Natural sequence",
+              "match": [
+                "Natural sequence"
+              ],
+              "cap": 110
+            },
+            {
+              "label": "Update trigger",
+              "match": [
+                "Feedback / update trigger",
+                "trigger"
+              ],
+              "cap": 70
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers",
+          "sheet": "Challenge→Strategy",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern",
+                "Challenge"
+              ],
+              "cap": 66
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritize",
+                "Prioritise"
+              ],
+              "cap": 36
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 130
+            }
+          ]
+        },
+        {
+          "title": "Algorithm families",
+          "sheet": "Family Map",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "Family",
+              "match": [
+                "Family"
+              ],
+              "cap": 40
+            },
+            {
+              "label": "Members",
+              "match": [
+                "Members"
+              ],
+              "cap": 70
+            },
+            {
+              "label": "Core contribution",
+              "match": [
+                "Core contribution"
+              ],
+              "cap": 80
+            },
+            {
+              "label": "Honest classical baseline",
+              "match": [
+                "classical competitor",
+                "baseline"
+              ],
+              "cap": 90
+            }
+          ],
+          "note": "The baseline column is the antidote to metaphor inflation. If the classical baseline already solves it, say so."
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Ontology Bridge",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Sub-strategy",
+              "match": [
+                "sub-strategy",
+                "strategy"
+              ],
+              "cap": 44
+            },
+            {
+              "label": "Ontology function",
+              "match": [
+                "Ontology function"
+              ],
+              "cap": 40
+            },
+            {
+              "label": "Operating principle",
+              "match": [
+                "Operating principle"
+              ],
+              "cap": 30
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Maturity Guide",
+          "type": "kv",
+          "skipRows": 2,
+          "cap": 220
+        }
+      ],
+      "budget": 13000
+    },
+    {
+      "key": "adhesion",
+      "code": "14",
+      "file": "14-adhesion.md",
+      "title": "Adhesion and attachment — function ontology",
+      "workbook": "Nature_Adhesion_Ontology_v1.xlsx",
+      "scope": "How organisms attach, hold, release and re-attach — wet and dry, reversible and permanent, across scales from molecular to whole-organism. Use for bonding, gripping, sealing against a surface, controlled release and anti-fouling. Adhesion used to close damage belongs to card 10; adhesion as the function itself belongs here. Version 1 — narrower than repair and patterns, and the card says so rather than implying coverage it does not have.",
+      "sourceSheets": [
+        "Papers (50)",
+        "Attached Sources"
+      ],
+      "sections": [
+        {
+          "title": "Strategies",
+          "sheet": "Adhesion Strategies",
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "Strategy ID"
+              ],
+              "cap": 12
+            },
+            {
+              "label": "Strategy",
+              "match": [
+                "Strategy"
+              ],
+              "cap": 46
+            },
+            {
+              "label": "Biological model",
+              "match": [
+                "Representative biological"
+              ],
+              "cap": 60
+            },
+            {
+              "label": "Engineering-neutral rule",
+              "match": [
+                "Engineering-neutral design rule"
+              ],
+              "cap": 140
+            },
+            {
+              "label": "Trade-off",
+              "match": [
+                "Main trade-off"
+              ],
+              "cap": 80
+            }
+          ]
+        },
+        {
+          "title": "Challenge triggers",
+          "sheet": "Challenge→Strategy",
+          "columns": [
+            {
+              "label": "Challenge",
+              "match": [
+                "Challenge pattern",
+                "Challenge"
+              ],
+              "cap": 66
+            },
+            {
+              "label": "Prioritise",
+              "match": [
+                "Prioritize",
+                "Prioritise"
+              ],
+              "cap": 36
+            },
+            {
+              "label": "Reasoning rule",
+              "match": [
+                "Reasoning rule"
+              ],
+              "cap": 130
+            }
+          ]
+        },
+        {
+          "title": "Bridge to the main ontology",
+          "sheet": "Ontology Bridge",
+          "minCols": 3,
+          "columns": [
+            {
+              "label": "ID",
+              "match": [
+                "ID"
+              ],
+              "cap": 8
+            },
+            {
+              "label": "Sub-strategy",
+              "match": [
+                "sub-strategy",
+                "strategy"
+              ],
+              "cap": 44
+            },
+            {
+              "label": "Ontology function",
+              "match": [
+                "Ontology function"
+              ],
+              "cap": 40
+            },
+            {
+              "label": "Operating principle",
+              "match": [
+                "Operating principle"
+              ],
+              "cap": 30
+            }
+          ]
+        },
+        {
+          "title": "Maturity guide",
+          "sheet": "Maturity Guide",
+          "type": "kv",
+          "skipRows": 2,
+          "cap": 200
+        }
+      ],
+      "budget": 13000
+    }
+  ]
+}

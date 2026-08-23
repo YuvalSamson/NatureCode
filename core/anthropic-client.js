@@ -173,8 +173,101 @@ async function askClaude({
   }
 }
 
+
+/**
+ * גרסה מזרימה. מחזירה את תגובת ה-fetch הגולמית כדי שהשרת יוכל
+ * לקרוא את זרם האירועים ולהעביר הלאה רק את מה שבטוח לחשוף.
+ * משתמשת באותו סולם ניסיונות — כי שגיאת יכולת מגיעה מיד, לפני שהזרם מתחיל.
+ */
+async function streamClaude({
+  apiKey, systemStable, systemVolatile, messages,
+  model, maxTokens, thinkingBudget, webSearch,
+}) {
+  if (!apiKey) {
+    return { ok: false, status: 500, error: { type: "config_error", message: "Missing ANTHROPIC_API_KEY on the server" } };
+  }
+
+  const system = [{ type: "text", text: systemStable, cache_control: { type: "ephemeral" } }];
+  if (systemVolatile) system.push({ type: "text", text: systemVolatile });
+
+  const budget = thinkingBudget === undefined ? DEFAULT_THINKING_BUDGET : thinkingBudget;
+  const tokens = maxTokens || DEFAULT_MAX_TOKENS;
+  const useSearch = webSearch !== false;
+
+  function buildBody({ thinkingMode, withEffort, withTools }) {
+    const body = {
+      model: model || DEFAULT_MODEL,
+      max_tokens: tokens,
+      system,
+      messages,
+      stream: true,
+    };
+    if (thinkingMode === "adaptive" && budget > 0) {
+      body.thinking = { type: "adaptive" };
+      if (withEffort) body.output_config = { effort: DEFAULT_EFFORT };
+    } else if (thinkingMode === "budget" && budget > 0) {
+      body.thinking = { type: "enabled", budget_tokens: Math.min(budget, tokens - 1024) };
+    }
+    if (withTools) {
+      body.tools = [{ type: "web_search_20250305", name: "web_search", max_uses: DEFAULT_MAX_SEARCHES }];
+    }
+    return body;
+  }
+
+  function isCapabilityError(err) {
+    const msg = ((err && err.message) || "").toLowerCase();
+    if (!msg) return false;
+    return ["thinking", "effort", "output_config", "tool", "web_search",
+            "max_tokens", "not supported", "unsupported", "unexpected", "invalid_request"]
+      .some(k => msg.includes(k));
+  }
+
+  const attempts = [
+    { thinkingMode: "adaptive", withEffort: true,  withTools: useSearch, label: "adaptive+effort+search" },
+    { thinkingMode: "adaptive", withEffort: false, withTools: useSearch, label: "adaptive+search" },
+    { thinkingMode: "budget",   withEffort: false, withTools: useSearch, label: "budget+search" },
+    { thinkingMode: null,       withEffort: false, withTools: useSearch, label: "search-only" },
+    { thinkingMode: null,       withEffort: false, withTools: false,     label: "plain" },
+  ];
+
+  let lastErr = null;
+  for (const attempt of attempts) {
+    try {
+      const upstream = await fetch(ANTHROPIC_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": ANTHROPIC_VERSION,
+        },
+        body: JSON.stringify(buildBody(attempt)),
+      });
+
+      if (upstream.ok && upstream.body) {
+        if (attempt.label !== "adaptive+effort+search") {
+          console.warn("Anthropic stream: degraded mode -", attempt.label);
+        }
+        return { ok: true, status: upstream.status, body: upstream.body };
+      }
+
+      const data = await upstream.json().catch(() => ({}));
+      lastErr = (data && data.error) || { type: "http_error", message: "HTTP " + upstream.status };
+      if (!isCapabilityError(lastErr)) {
+        console.error("Anthropic stream error (no retry):", upstream.status, JSON.stringify(lastErr));
+        return { ok: false, status: upstream.status, error: lastErr };
+      }
+      console.warn("Anthropic stream: attempt '" + attempt.label + "' rejected -", lastErr.message);
+    } catch (e) {
+      console.error("Anthropic stream request failed:", String(e));
+      return { ok: false, status: 502, error: { type: "proxy_error", message: String(e) } };
+    }
+  }
+  return { ok: false, status: 400, error: lastErr || { type: "unknown", message: "all attempts failed" } };
+}
+
 module.exports = {
   askClaude,
+  streamClaude,
   DEFAULT_MODEL,
   DEFAULT_MAX_TOKENS,
   DEFAULT_THINKING_BUDGET,

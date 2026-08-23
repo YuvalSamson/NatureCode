@@ -15,5 +15,8 @@
   },
   "optionalDependencies": {
     "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "xlsx": "^0.18.5"
   }
 }

@@ -95,6 +95,29 @@
     max-width:100%; padding:16px 20px; border-radius:16px; font-size:15.5px;
     line-height:1.7; white-space:pre-wrap; word-wrap:break-word;
   }
+  /* התקדמות חיה */
+  .live-status {
+    display:flex; align-items:center; gap:9px; font-size:13.5px;
+    color:var(--ink-soft); margin-bottom:9px;
+  }
+  .live-dot {
+    width:7px; height:7px; border-radius:50%; background:var(--moss);
+    animation:pulse 1.3s ease-in-out infinite; flex-shrink:0;
+  }
+  @keyframes pulse { 0%,100%{opacity:.35;transform:scale(.8)} 50%{opacity:1;transform:scale(1.15)} }
+  .live-search {
+    font-size:12px; padding:4px 11px; border-radius:14px;
+    background:var(--leaf-pale); color:var(--moss); font-weight:500;
+    margin:0 0 5px; display:inline-block; animation:fadeIn .25s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-3px)} to{opacity:1;transform:none} }
+  .live-think {
+    font-size:12.5px; color:var(--ink-soft); opacity:.7; line-height:1.6;
+    max-height:88px; overflow:hidden; margin-bottom:8px;
+    -webkit-mask-image:linear-gradient(to bottom,#000 40%,transparent);
+    mask-image:linear-gradient(to bottom,#000 40%,transparent);
+  }
+
   /* פאנל החשיבה */
   .think {
     margin-bottom:10px; border:1px solid var(--line); border-radius:12px;
@@ -213,10 +236,19 @@
       error: "Couldn't reach the engine. Check your connection and try again.",
       thinkingLabel: "How I worked this out",
       searching: "Checking sources...",
+      stageStart: "Getting to work",
+      stageThinking: "Working out the approach",
+      stageContext: "Reading the real constraints",
+      stageSearching: "Checking what already exists",
+      stageReading: "Reading what came back",
+      stageMaturity: "Checking how production-ready it is",
+      stageWriting: "Writing the answer",
+      searchedFor: "Searched",
       chatSearchPlaceholder: "Search conversations",
       chatsLoading: "Loading conversations...",
       chatsError: "Couldn't load your conversations.",
       retry: "Retry",
+      saveFailed: "Conversations aren\u2019t being saved \u2014 the database isn\u2019t connected.",
       noChats: "No conversations yet.",
       noMatches: "No conversations match.",
       groupToday: "Today", groupYesterday: "Yesterday",
@@ -232,10 +264,19 @@
       error: "החיבור למנוע נכשל. בדקו את החיבור ונסו שוב.",
       thinkingLabel: "איך הגעתי לזה",
       searching: "בודק מקורות...",
+      stageStart: "מתחיל לעבוד",
+      stageThinking: "מגבש גישה",
+      stageContext: "קורא את האילוצים האמיתיים",
+      stageSearching: "בודק מה כבר קיים",
+      stageReading: "קורא את מה שנמצא",
+      stageMaturity: "בודק כמה זה בשל לייצור",
+      stageWriting: "מנסח את התשובה",
+      searchedFor: "חיפש",
       chatSearchPlaceholder: "חיפוש בשיחות",
       chatsLoading: "טוען שיחות...",
       chatsError: "טעינת השיחות נכשלה.",
       retry: "נסה שוב",
+      saveFailed: "השיחות לא נשמרות — מסד הנתונים אינו מחובר.",
       noChats: "עדיין אין שיחות.",
       noMatches: "אין שיחות תואמות.",
       groupToday: "היום", groupYesterday: "אתמול",
@@ -401,17 +442,132 @@
     await loadChats();
   }
 
+  let persistBroken = false;
+
+  //  שומר את השיחה. נקראת מיד כששולחים — לא רק אחרי תשובה — כדי
+  //  שהשיחה תופיע בסרגל מיד, ותישמר גם אם הקריאה למנוע נכשלת.
+  //  קורא זרם אירועים מהשרת ומעדכן את התצוגה תוך כדי.
+  //  מחזיר true אם הצליח, false אם צריך ליפול לקריאה רגילה.
+  async function sendStreaming(apiMessages) {
+    let response;
+    try {
+      response = await fetch("/api/ask-stream", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: MODEL, messages: apiMessages, lang }),
+      });
+    } catch (e) { return false; }
+    if (!response.ok || !response.body) return false;
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "", streamErr = null, got = false;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() || "";
+
+      for (const part of parts) {
+        const line = part.split("\n").find(l => l.startsWith("data:"));
+        if (!line) continue;
+        let ev;
+        try { ev = JSON.parse(line.slice(5).trim()); } catch (e) { continue; }
+
+        if (ev.type === "status") { live.stage = ev.stage; renderThread(true); }
+        else if (ev.type === "search") { live.searches.push(ev.query); renderThread(true); }
+        else if (ev.type === "thinking_delta") { live.thinking += ev.text; renderThread(true); }
+        else if (ev.type === "text_delta") { got = true; live.text += ev.text; renderThread(true); }
+        else if (ev.type === "error") { streamErr = ev.message; }
+      }
+    }
+
+    if (streamErr && !got) throw new Error(streamErr);
+    if (!got) return false;
+
+    currentChat.messages.push({
+      role: "assistant", content: live.text,
+      thinking: live.thinking, searches: live.searches.slice(),
+    });
+    return true;
+  }
+
+  //  קריאה רגילה, ללא הזרמה — רשת ביטחון.
+  async function sendPlain(apiMessages) {
+    const response = await fetch("/api/ask", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: MODEL, messages: apiMessages, lang }),
+    });
+    const data = await response.json();
+    if (data.error) {
+      const em = (typeof data.error === "string")
+        ? data.error : (data.error.message || data.error.type || JSON.stringify(data.error));
+      throw new Error(em);
+    }
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const blocks = data.content || [];
+    currentChat.messages.push({
+      role: "assistant",
+      content: blocks.filter(b => b.type === "text").map(b => b.text).join("\n"),
+      thinking: blocks.filter(b => b.type === "thinking").map(b => b.thinking || "").join("\n\n").trim(),
+      searches: blocks.filter(b => b.type === "server_tool_use" && b.name === "web_search")
+                      .map(b => (b.input && b.input.query) || "").filter(Boolean),
+    });
+  }
+
   async function persistChat() {
     if (!currentChat) return;
     try {
-      await fetch("/api/chats/" + encodeURIComponent(currentChat.id), {
+      const r = await fetch("/api/chats/" + encodeURIComponent(currentChat.id), {
         method:"PUT", headers:{"Content-Type":"application/json"},
         body: JSON.stringify(currentChat),
       });
-    } catch (e) {}
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      persistBroken = false;
+    } catch (e) {
+      //  כשל שמירה נבלע בשקט בגרסאות קודמות — ואז נראה כאילו
+      //  ההיסטוריה פשוט לא עובדת, בלי שום רמז לסיבה.
+      console.error("persistChat failed:", e);
+      if (!persistBroken) {
+        persistBroken = true;
+        const slot = document.getElementById("errorSlot");
+        if (slot && !slot.innerHTML) {
+          slot.innerHTML = '<div class="error-box">' + T().saveFailed + '</div>';
+        }
+      }
+    }
   }
 
   // ----- תצוגת השיחה -----
+  //  מצב ההזרמה החי — מה המנוע עושה ברגע זה.
+  let live = null;   // { stage, searches:[], thinking:"", text:"" }
+
+  function stageLabel(stage) {
+    const t = T();
+    return ({ start:t.stageStart, thinking:t.stageThinking, searching:t.stageSearching,
+              reading:t.stageReading, maturity:t.stageMaturity,
+              context:t.stageContext, writing:t.stageWriting })[stage] || t.searching;
+  }
+
+  function liveHtml() {
+    if (!live) return "";
+    let h = '<div class="live-status"><span class="live-dot"></span><span>' +
+            escapeHtml(stageLabel(live.stage)) + '</span></div>';
+    if (live.searches.length) {
+      h += '<div>' + live.searches.map(q =>
+        '<div class="live-search">\u2315 ' + escapeHtml(q) + '</div>').join("") + '</div>';
+    }
+    if (live.thinking && !live.text) {
+      const tail = live.thinking.slice(-320);
+      h += '<div class="live-think">' + escapeHtml(tail) + '</div>';
+    }
+    if (live.text) {
+      h += '<div class="bubble">' + formatContent(live.text) + '</div>';
+    }
+    return h;
+  }
+
   function renderThread(loading) {
     const inner = document.getElementById("threadInner");
     if (!currentChat || currentChat.messages.length === 0) {
@@ -441,8 +597,9 @@
       return `<div class="msg ${m.role}">${extra ? `<div style="max-width:100%">${extra}<div class="bubble">${formatContent(m.content)}</div></div>` : `<div class="bubble">${formatContent(m.content)}</div>`}</div>`;
     }).join("");
     if (loading) {
-      html += `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div>
-        <div style="font-size:12.5px;color:var(--ink-faint);margin-top:6px">${T().searching}</div></div></div>`;
+      html += live
+        ? `<div class="msg assistant"><div style="max-width:100%">${liveHtml()}</div></div>`
+        : `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
     }
     inner.innerHTML = html;
     document.getElementById("thread").scrollTop = 99999;
@@ -475,43 +632,36 @@
     renderThread(true);
     setSending(true);
 
+    //  שמירה מיידית: השיחה מופיעה בסרגל ברגע שנשלחה, כמו בקלוד,
+    //  ולא נעלמת אם המנוע מחזיר שגיאה.
+    await persistChat();
+    await loadChats();
+
     // בונים את ההודעות ל-API. קהל היעד קבוע (יזמים) ומוגדר בבסיס הידע.
     const apiMessages = currentChat.messages.map(m => ({
       role: m.role === "user" ? "user" : "assistant",
       content: m.content,
     }));
 
+    live = { stage: "start", searches: [], thinking: "", text: "" };
+    renderThread(true);
+
     try {
-      const response = await fetch("/api/ask", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:MODEL, messages:apiMessages, lang }),
-      });
-      const data = await response.json();
-      if (data.error) {
-        //  data.error הוא אובייקט: {type, message}. בלי החילוץ הזה
-        //  המשתמש רואה "[object Object]" ואי אפשר לאבחן דבר.
-        const em = (typeof data.error === "string")
-          ? data.error
-          : (data.error.message || data.error.type || JSON.stringify(data.error));
-        throw new Error(em);
-      }
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status);
-      }
-      const blocks = data.content || [];
-      const reply = blocks.filter(b => b.type==="text").map(b => b.text).join("\n");
-      const thinking = blocks.filter(b => b.type==="thinking")
-                             .map(b => b.thinking || "").join("\n\n").trim();
-      const searches = blocks
-        .filter(b => b.type==="server_tool_use" && b.name==="web_search")
-        .map(b => (b.input && b.input.query) || "")
-        .filter(Boolean);
-      currentChat.messages.push({ role:"assistant", content:reply, thinking, searches });
+      //  הזרמה: הדפדפן מקבל אירועים בזמן אמת ומראה למשתמש
+      //  בדיוק מה המנוע עושה כרגע. אם ההזרמה נכשלת — נופלים
+      //  חזרה לקריאה הרגילה, כדי שתקלה בהזרמה לא תשבור את המנוע.
+      const ok = await sendStreaming(apiMessages);
+      if (!ok) await sendPlain(apiMessages);
+
+      live = null;
       await persistChat();
       renderThread();
       await loadChats();
     } catch (e) {
+      live = null;
       renderThread();
+      //  שומרים גם בכישלון — שאלת המשתמש לא תיעלם.
+      await persistChat();
       const detail = (e && e.message) ? String(e.message) : "";
       document.getElementById("errorSlot").innerHTML =
         '<div class="error-box">' + T().error +

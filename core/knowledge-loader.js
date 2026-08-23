@@ -1,45 +1,75 @@
+
 // ============================================================
 //  core/knowledge-loader.js
-//  הגרעין התשתיתי — מרכיב את שלושת קבצי הידע לבלוק יציב אחד.
+//  טוען את בלוק הידע היציב מתיקיית knowledge/.
 //
-//  הבלוק המורכב הוא ה-system שנשלח לאדונטרופיק ונשמר במטמון.
-//  הקבצים נקראים פעם אחת לזיכרון באתחול (loadKnowledge),
-//  כדי שלא ייקראו מהדיסק בכל בקשה.
-//
-//  סדר ההרכבה קובע את המטמון: מהיציב ביותר למכוונן —
-//  identity → flow → rules.
+//  סורק את התיקייה לפי סדר שמות הקבצים — לא לפי רשימה קבועה.
+//  לכן הוספת אונטולוגיה חדשה היא הנחת קובץ בתיקייה, בלי נגיעה בקוד.
+//  הקבצים 01–05 נכתבים ביד; הקבצים מ-10 ומעלה נוצרים במזקק.
 // ============================================================
 
 const fs = require("fs");
 const path = require("path");
 
 const KNOWLEDGE_DIR = path.join(__dirname, "..", "knowledge");
-const FILES = ["01-identity.md", "02-flow.md", "03-rules.md"];
-const SEPARATOR = "\n\n";
 
-let cachedKnowledge = null;
+let cache = null;
 
-// קורא ומרכיב את שלושת הקבצים. נקרא פעם אחת באתחול.
-function loadKnowledge() {
-  const parts = FILES.map((file) => {
-    const full = path.join(KNOWLEDGE_DIR, file);
-    return fs.readFileSync(full, "utf8").trim();
-  });
-  cachedKnowledge = parts.join(SEPARATOR);
-  return cachedKnowledge;
-}
-
-// מחזיר את בלוק הידע המורכב (מהזיכרון).
-function getKnowledge() {
-  if (cachedKnowledge === null) {
-    return loadKnowledge();
+function readAll() {
+  if (!fs.existsSync(KNOWLEDGE_DIR)) {
+    throw new Error("knowledge directory not found: " + KNOWLEDGE_DIR);
   }
-  return cachedKnowledge;
+
+  //  סדר לקסיקוגרפי. המספור בשמות הקבצים הוא שקובע את סדר הבלוק.
+  const files = fs
+    .readdirSync(KNOWLEDGE_DIR)
+    .filter((f) => f.endsWith(".md"))
+    .sort();
+
+  if (!files.length) {
+    throw new Error("no .md files found in " + KNOWLEDGE_DIR);
+  }
+
+  const parts = [];
+  const report = [];
+
+  for (const name of files) {
+    const full = path.join(KNOWLEDGE_DIR, name);
+    const text = fs.readFileSync(full, "utf8").trim();
+    if (!text) continue;
+
+    //  מפריד מסומן — כך גבול בין קבצים ברור למודל.
+    parts.push("<!-- ===== " + name + " ===== -->\n" + text);
+    report.push({ name, bytes: Buffer.byteLength(text, "utf8") });
+  }
+
+  const combined = parts.join("\n\n---\n\n");
+  const bytes = Buffer.byteLength(combined, "utf8");
+
+  //  דוח טעינה. בלעדיו קובץ שלא נטען נראה בדיוק כמו קובץ שנטען.
+  console.log("Knowledge loaded — " + report.length + " files, " +
+    (bytes / 1024).toFixed(1) + " KB, roughly " +
+    Math.round(bytes / 3.7 / 1000) + "k tokens:");
+  for (const r of report) {
+    console.log("   " + r.name + "  " + (r.bytes / 1024).toFixed(1) + " KB");
+  }
+
+  return combined;
 }
 
-// טוען מחדש מהדיסק — שימושי אחרי שיפור המודל בלי הפעלה מחדש.
+function loadKnowledge() {
+  cache = readAll();
+  return cache;
+}
+
+function getKnowledge() {
+  if (cache === null) loadKnowledge();
+  return cache;
+}
+
 function reloadKnowledge() {
+  cache = null;
   return loadKnowledge();
 }
 
-module.exports = { loadKnowledge, getKnowledge, reloadKnowledge };
+module.exports = { loadKnowledge, getKnowledge, reloadKnowledge, KNOWLEDGE_DIR };

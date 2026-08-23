@@ -9,7 +9,7 @@ const path = require("path");
 
 try { require("dotenv").config(); } catch (e) { /* dotenv optional */ }
 
-const { askClaude, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_THINKING_BUDGET } = require("./core/anthropic-client");
+const { askClaude, streamClaude, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, DEFAULT_THINKING_BUDGET } = require("./core/anthropic-client");
 const { initDb, getChats, getChat, upsertChat, deleteChat } = require("./core/db");
 const { loadKnowledge, getKnowledge, reloadKnowledge } = require("./core/knowledge-loader");
 
@@ -26,6 +26,146 @@ app.get("/", (req, res) => {
 });
 
 // ---------- ניהול שיחות ----------
+// ============================================================
+//  הזרמה בזמן אמת.
+//  השרת קורא את זרם האירועים של אנתרופיק ומעביר לדפדפן רק את מה
+//  שהוחלט שבטוח לחשוף: שלב העבודה, שאילתות החיפוש, החשיבה והטקסט.
+//  מבנה הבקשה, בלוק הידע והמודל לעולם אינם עוברים לדפדפן.
+// ============================================================
+app.post("/api/ask-stream", async (req, res) => {
+  const { messages, model, maxTokens, lang, thinkingBudget, webSearch } = req.body || {};
+
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");   // מונע באפרינג בפרוקסי של רנדר
+  if (res.flushHeaders) res.flushHeaders();
+
+  const send = (obj) => {
+    try { res.write("data: " + JSON.stringify(obj) + "\n\n"); } catch (e) {}
+  };
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    send({ type: "error", message: "messages array is required" });
+    return res.end();
+  }
+  if (!ANTHROPIC_API_KEY) {
+    console.error("ASK-STREAM FAILED: ANTHROPIC_API_KEY is not set");
+    send({ type: "error", message: "ANTHROPIC_API_KEY is not set on the server" });
+    return res.end();
+  }
+
+  const langCode = lang || DEFAULT_LANGUAGE;
+  const langName = LANGUAGES[langCode] || LANGUAGES[DEFAULT_LANGUAGE];
+  const systemVolatile =
+    "RESPONSE LANGUAGE: Write every turn in " + langName +
+    ". Keep the same tight, concrete, low-reading style in that language — do not lengthen turns when translating. " +
+    "If the user writes in a different language, follow the user's language instead.";
+
+  const result = await streamClaude({
+    apiKey: ANTHROPIC_API_KEY,
+    systemStable: getKnowledge(),
+    systemVolatile,
+    messages,
+    model: model || DEFAULT_MODEL,
+    maxTokens: maxTokens || DEFAULT_MAX_TOKENS,
+    thinkingBudget: thinkingBudget === undefined ? DEFAULT_THINKING_BUDGET : thinkingBudget,
+    webSearch: webSearch !== false,
+  });
+
+  if (!result.ok) {
+    console.error("ASK-STREAM FAILED:", result.status, JSON.stringify(result.error));
+    send({ type: "error", message: (result.error && result.error.message) || "request failed" });
+    return res.end();
+  }
+
+  send({ type: "status", stage: "start" });
+
+  //  צובר קלט חלקי של קריאות כלי, כדי לחלץ את שאילתת החיפוש
+  //  רק כשהיא שלמה.
+  let toolJson = "";
+  let inTool = false;
+  let searchCount = 0;
+  let sawText = false;
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    for await (const chunk of result.body) {
+      buffer += decoder.decode(chunk, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() || "";
+
+      for (const part of parts) {
+        const line = part.split("\n").find(l => l.startsWith("data:"));
+        if (!line) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+
+        let ev;
+        try { ev = JSON.parse(payload); } catch (e) { continue; }
+
+        if (ev.type === "content_block_start") {
+          const b = ev.content_block || {};
+          if (b.type === "thinking") {
+            send({ type: "status", stage: "thinking" });
+          } else if (b.type === "server_tool_use") {
+            inTool = true; toolJson = "";
+            send({ type: "status", stage: "searching" });
+          } else if (b.type === "web_search_tool_result") {
+            send({ type: "status", stage: "reading" });
+          } else if (b.type === "text") {
+            if (!sawText) { sawText = true; send({ type: "status", stage: "writing" }); }
+          }
+        }
+
+        else if (ev.type === "content_block_delta") {
+          const d = ev.delta || {};
+          if (d.type === "thinking_delta" && d.thinking) {
+            send({ type: "thinking_delta", text: d.thinking });
+          } else if (d.type === "text_delta" && d.text) {
+            send({ type: "text_delta", text: d.text });
+          } else if (d.type === "input_json_delta" && inTool) {
+            toolJson += d.partial_json || "";
+          }
+        }
+
+        else if (ev.type === "content_block_stop") {
+          if (inTool) {
+            inTool = false;
+            try {
+              const parsed = JSON.parse(toolJson || "{}");
+              if (parsed.query) {
+                searchCount++;
+                send({ type: "search", query: String(parsed.query), n: searchCount });
+                //  אחרי כמה חיפושים, המנוע בדרך כלל עובר לבדיקת בשלות.
+                //  מבוסס על שאילתת החיפוש עצמה, לא על טיימר.
+                const q = String(parsed.query).toLowerCase();
+                if (/pilot|scale|manufactur|production|supplier|commercial|yield|trl/.test(q)) {
+                  send({ type: "status", stage: "maturity" });
+                } else if (/constraint|cost|temperature|regulat|standard|environment|condition/.test(q)) {
+                  send({ type: "status", stage: "context" });
+                }
+              }
+            } catch (e) {}
+            toolJson = "";
+          }
+        }
+
+        else if (ev.type === "error") {
+          send({ type: "error", message: (ev.error && ev.error.message) || "stream error" });
+        }
+      }
+    }
+    send({ type: "done", searches: searchCount });
+  } catch (e) {
+    console.error("ASK-STREAM EXCEPTION:", String(e));
+    send({ type: "error", message: String(e) });
+  }
+  res.end();
+});
+
 app.get("/api/chats", async (req, res) => {
   try {
     const chats = await getChats(req.query.variant);
