@@ -162,6 +162,11 @@
      והקו ההפוך לשחור, ולכן הוא יושב על כל רקע.
      המסלול: הדמות מתחילה בשמאל ונעה ימינה לאורך כל הרוחב בזמן
      שהאנימציה הפנימית רצה — שתי תנועות בלתי תלויות. */
+  /*  ההודעה היא מיכל גמיש, ולכן עטיפה רגילה מתכווצת לרוחב
+      התוכן הרחב ביותר שבתוכה — שורת מקור ארוכה. כתוצאה מכך
+      מסלול החיה התחיל מהשוליים של אותה שורה ולא מהשוליים של
+      העמודה. flex:1 מקבע את העטיפה לרוחב מלא. */
+  .live-wrap { flex:1 1 100%; min-width:0; max-width:100%; }
   .monkey-track {
     position:relative; height:56px; margin:2px 0 10px;
     overflow:hidden; pointer-events:none;
@@ -366,9 +371,10 @@
   //  בורר המודל. הבחירה חיה לשיחה הנוכחית בלבד ואינה נשמרת —
   //  שיחה חדשה נפתחת תמיד בברירת המחדל.
   const MODELS = [
-    { id: "claude-fable-5",  label: "Fable 5"  },
-    { id: "claude-opus-5",   label: "Opus 5"   },
-    { id: "claude-sonnet-5", label: "Sonnet 5" },
+    { id: "claude-fable-5",           label: "Fable 5"   },
+    { id: "claude-opus-5",            label: "Opus 5"    },
+    { id: "claude-sonnet-5",          label: "Sonnet 5"  },
+    { id: "claude-haiku-4-5-20251001", label: "Haiku 4.5" },
   ];
   const DEFAULT_MODEL_ID = "claude-opus-5";
   let MODEL = DEFAULT_MODEL_ID;
@@ -379,7 +385,7 @@
   //  גרסת האתר מוגדרת כאן, בקובץ שהיא מתארת. העלה אותה כשאתה
   //  משנה את הדף. שתי האחרות נמשכות מהשרת בזמן ריצה, ולכן
   //  אינן יכולות להציג מספר ישן בטעות.
-  const SITE_VERSION = "7.1";
+  const SITE_VERSION = "7.5";
 
   //  ההבדל היחיד בין index.html ל-index-dev.html.
   //  false — ללא בורר מודל; המנוע רץ תמיד בברירת המחדל.
@@ -922,12 +928,23 @@
   //  הסדר מוגרל מחדש בכל שאלה, כדי שלא ייווצר רצף צפוי.
   const ANIMALS = ["monkey", "horse", "lion", "deer", "eagle",
                    "elefent", "snake", "whale", "chita", "manteray"];
-  const TRAVEL_S = 16;
+  //  משך חצייה לכל חיה, בשניות. ככל שהמספר קטן — התנועה מהירה
+  //  יותר. מי שאינו מופיע כאן נשאר בקצב ברירת המחדל.
+  const TRAVEL_S_DEFAULT = 16;
+  const TRAVEL_S = {
+    chita:    7,    // המהיר מכולם
+    horse:   10,
+    monkey:  13,
+    lion:    20,    // האיטיים
+    elefent: 20,
+  };
+  function travelSeconds(name) {
+    return (TRAVEL_S[name] || TRAVEL_S_DEFAULT) * 1000;
+  }
 
   let animalOrder = ANIMALS.slice();
   let animalIdx = 0;
-  let travelStart = 0;
-  let travelLoop = -1;
+  let segStart = 0;      // תחילת החצייה של החיה הנוכחית
   let travelX = 0;
   let travelRAF = null;
 
@@ -956,18 +973,20 @@
     const track = document.getElementById("animalTrack");
     const el = track && track.querySelector(".monkey");
     if (el && track.clientWidth) {
-      const t = (performance.now() - travelStart) / (TRAVEL_S * 1000);
-      const loop = Math.floor(t);
-      //  סוף מעבר — מחליפים לחיה הבאה בסבב.
-      if (loop !== travelLoop) {
-        if (travelLoop >= 0) {
-          animalIdx = (animalIdx + 1) % animalOrder.length;
-          el.src = animalSrc(false);
-        }
-        travelLoop = loop;
+      const dur = travelSeconds(animalOrder[animalIdx]);
+      let t = (performance.now() - segStart) / dur;
+
+      //  סוף חצייה — מחליפים לחיה הבאה ומאפסים את הקטע.
+      //  כל חיה מודדת את הזמן שלה, ולכן קצב שונה לכל אחת.
+      if (t >= 1) {
+        animalIdx = (animalIdx + 1) % animalOrder.length;
+        segStart = performance.now();
+        el.src = animalSrc(false);
+        t = 0;
       }
+
       const span = Math.max(0, track.clientWidth - el.offsetWidth);
-      travelX = (t - loop) * span;
+      travelX = t * span;
       el.style.transform = "translateX(" + travelX.toFixed(1) + "px)";
     }
     travelRAF = requestAnimationFrame(travelTick);
@@ -976,8 +995,7 @@
   function startTravel() {
     animalOrder = shuffled(ANIMALS);
     animalIdx = 0;
-    travelStart = performance.now();
-    travelLoop = -1;
+    segStart = performance.now();
     travelX = 0;
     if (travelRAF) cancelAnimationFrame(travelRAF);
     travelRAF = requestAnimationFrame(travelTick);
@@ -1075,13 +1093,18 @@
             monkeyHtml(animStatic) +
             '<div class="live-status' + st + '"><span>' + escapeHtml(phaseLabel()) +
             '<span class="dots"></span></span></div></div>';
-    if (live.searches.length) {
-      h += '<div>' + live.searches.map(q =>
-        '<div class="live-search">\u2315 ' + escapeHtml(q) + '</div>').join("") + '</div>';
-    }
-    if (live.thinking && !live.text) {
-      const tail = live.thinking.slice(-320);
-      h += '<div class="live-think">' + escapeHtml(tail) + '</div>';
+    //  ברגע שהתשובה מתחילה להיכתב, שאילתות החיפוש ותצוגת החשיבה
+    //  יורדות. הן כבר לא מוסיפות מידע, והן נבנו מחדש עם כל מילה
+    //  שנכתבה — מה שיצר ריצוד מול העין.
+    if (!live.text) {
+      if (live.searches.length) {
+        h += '<div>' + live.searches.map(q =>
+          '<div class="live-search">\u2315 ' + escapeHtml(q) + '</div>').join("") + '</div>';
+      }
+      if (live.thinking) {
+        const tail = live.thinking.slice(-320);
+        h += '<div class="live-think">' + escapeHtml(tail) + '</div>';
+      }
     }
     if (live.text) {
       h += '<div class="bubble">' + formatContent(live.text) + '</div>';
@@ -1141,7 +1164,7 @@
     }).join("");
     if (loading) {
       html += live
-        ? `<div class="msg assistant"><div style="max-width:100%">${liveHtml()}</div></div>`
+        ? `<div class="msg assistant"><div class="live-wrap">${liveHtml()}</div></div>`
         : `<div class="msg assistant"><div class="bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>`;
     }
     inner.innerHTML = html;
