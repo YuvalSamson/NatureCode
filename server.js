@@ -24,12 +24,18 @@ const PORT = process.env.PORT || 3000;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 app.use(express.json({ limit: "8mb" }));
-app.use(express.static(path.join(__dirname, "public")));
 
-// הדף הראשי
+//  הדף הראשי — מוגדר לפני ההגשה הסטטית, ולא אחריה. כשההגשה
+//  הסטטית קודמת, היא זו שפותרת את "/" בעצמה, והמסלול המפורש
+//  שמתחתיה אינו נקרא כלל. הסדר הזה מבטיח שהשורש תמיד index.html.
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+//  index:false מכבה את פתרון ברירת המחדל של התיקייה, כדי שלא
+//  תהיה דרך שנייה להגיע לדף הראשי. גרסת הפיתוח נשארת נגישה
+//  בשמה המפורש בלבד.
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 // ---------- ניהול שיחות ----------
 // ============================================================
@@ -300,8 +306,28 @@ app.post("/api/reload-knowledge", (req, res) => {
 });
 
 // ---------- אתחול ----------
+//  מדפיס איזו גרסה יושבת בכל אחד מקובצי הדף. בלי זה, קובץ
+//  שהועתק בטעות נראה בדיוק כמו קובץ תקין, והבלבול מתגלה רק
+//  בדפדפן.
+function reportPages() {
+  const fs = require("fs");
+  for (const name of ["index.html", "index-dev.html"]) {
+    const file = path.join(__dirname, "public", name);
+    try {
+      const text = fs.readFileSync(file, "utf8");
+      const ver = (text.match(/SITE_VERSION\s*=\s*"([^"]+)"/) || [])[1] || "?";
+      const picker = (text.match(/SHOW_MODEL_PICKER\s*=\s*(true|false)/) || [])[1] || "?";
+      console.log("   " + name + "  version " + ver + "  model picker " + picker);
+    } catch (e) {
+      console.warn("   " + name + "  MISSING");
+    }
+  }
+}
+
 async function start() {
   loadKnowledge();
+  console.log("Pages:");
+  reportPages();
   try {
     await initDb();
     console.log("DB ready.");
