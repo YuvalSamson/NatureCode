@@ -50,7 +50,7 @@ async function initDb() {
   //    שורות קיימות מסומנות 'legacy' כדי לשמור הפרדה
   //    מהשיחות החדשות ('live').
   await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS variant TEXT;`);
-  await pool.query(`UPDATE chats SET variant = 'legacy' WHERE variant IS NULL;`);
+  await pool.query(`UPDATE chats SET variant = 'live' WHERE variant IS NULL OR variant = 'legacy';`);
   await pool.query(`ALTER TABLE chats ALTER COLUMN variant SET DEFAULT 'live';`);
   await pool.query(`ALTER TABLE chats ALTER COLUMN variant SET NOT NULL;`);
 
