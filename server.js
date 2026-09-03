@@ -17,7 +17,7 @@ const { loadKnowledge, getKnowledge, reloadKnowledge, getKnowledgeMeta } = requi
 //  גרסת המנוע. העלה אותה כשמשנים לוגיקה בשרת או בגרעין.
 //  גרסת הידע אינה מוגדרת כאן — היא מחושבת מתוכן קובצי הידע
 //  עצמם, ולכן אי אפשר לשכוח לעדכן אותה.
-const ENGINE_VERSION = "11.1";
+const ENGINE_VERSION = "11.2";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
